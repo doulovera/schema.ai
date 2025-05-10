@@ -20,9 +20,9 @@ export function ChatInput() {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="generame..." className="flex-1" />
+      <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Write your specifications..." className="flex-1" />
       <Button type="submit" size="sm">
-        ok
+        Send
       </Button>
     </form>
   )

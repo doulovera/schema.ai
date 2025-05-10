@@ -1,15 +1,17 @@
 "use client"
 import { useState } from "react"
 import { ChevronDown, ChevronUp, Download, Trash2 } from "lucide-react"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Button } from "@/components/ui/button"
 import { DiagramView } from "@/components/chat/diagram-view"
 import { SchemaView } from "@/components/chat/schema-view"
 import { ChatInput } from "@/components/chat/chat-input"
 import { ConversationView } from "@/components/chat/conversation-view"
+import { conversationMock } from "@/mocks/conversation"
 
 export default function SchemaPage({ params }: { params: { slug: string } }) {
+  const conversation = conversationMock
+
   const [showConversation, setShowConversation] = useState(true)
   const [showSchemas, setShowSchemas] = useState(true)
 
@@ -25,7 +27,7 @@ export default function SchemaPage({ params }: { params: { slug: string } }) {
               <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b flex justify-between items-center">
-                    <h2 className="text-lg font-medium">conversacion</h2>
+                    <h2 className="text-lg font-medium">{conversation.title}</h2>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -36,7 +38,7 @@ export default function SchemaPage({ params }: { params: { slug: string } }) {
                     </Button>
                   </div>
                   <div className="flex-1 overflow-auto p-4">
-                    <ConversationView />
+                    <ConversationView messages={conversation.messages} />
                   </div>
                   <div className="p-4 border-t">
                     <ChatInput />
@@ -54,7 +56,7 @@ export default function SchemaPage({ params }: { params: { slug: string } }) {
               <ResizablePanel defaultSize={70}>
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b flex justify-between items-center">
-                    <h2 className="text-lg font-medium">diagramas</h2>
+                    <h2 className="text-lg font-medium">Diagram</h2>
                     <div className="flex gap-2">
                       {!showConversation && (
                         <Button
@@ -89,7 +91,7 @@ export default function SchemaPage({ params }: { params: { slug: string } }) {
                   <ResizablePanel defaultSize={30}>
                     <div className="flex flex-col h-full">
                       <div className="p-4 border-b flex justify-between items-center">
-                        <h2 className="text-lg font-medium">schemas</h2>
+                        <h2 className="text-lg font-medium">Schemas</h2>
                         <Button
                           variant="ghost"
                           size="icon"
