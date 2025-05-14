@@ -1,8 +1,13 @@
 "use client";
-
+import { useState, useCallback } from "react";
 import React from "react";
 import convert from "xml-js"; // xml to json
-import { ReactFlow, Background, Controls } from "@xyflow/react";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  applyNodeChanges,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import CustomNode from "./CustomNode";
 
@@ -15,7 +20,7 @@ const horizontalSpacing = 500;
 const verticalSpacing = 400;
 
 const Diagrama = ({ xmlString }: { xmlString: string }) => {
-  const nodes = React.useMemo(() => {
+  const initialNodes = React.useMemo(() => {
     if (!xmlString) return [];
 
     try {
@@ -88,12 +93,19 @@ const Diagrama = ({ xmlString }: { xmlString: string }) => {
     }
   }, [xmlString]);
 
+  const [nodes, setNodes] = useState(initialNodes);
+  const onNodesChange = useCallback(
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    []
+  );
+
   return (
     <ReactFlow
       nodeTypes={nodeTypes}
       nodes={nodes}
+      onNodesChange={onNodesChange}
       fitView
-      style={{ width: "100%", height: "100vh" }}
+      style={{ width: "100%", height: "100%" }}
     >
       <Background />
       <Controls />

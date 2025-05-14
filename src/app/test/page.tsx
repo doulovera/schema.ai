@@ -1,9 +1,9 @@
-// app/testPage.jsx (Server Component)
-import Diagrama from "./Diagrama";
 import { generateXML } from "./XmlMock";
-// xml to json conversion
-
-export default async function testPage() {
+import PageContent from "./PageContent";
+// export default
+export default async function TestPage() {
+  // generando string xml con información relacionada con la base de datos
   const xmlString = await generateXML();
-  return <Diagrama xmlString={xmlString} />;
+  // Page
+  return <PageContent xmlString={xmlString} />;
 }
