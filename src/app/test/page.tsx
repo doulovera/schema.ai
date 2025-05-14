@@ -1,5 +1,5 @@
-import { generateXML } from "./XmlMock";
-import PageContent from "./PageContent";
+import { generateXML } from "@/lib/gemini-utils";
+import PageContent from "./page-content";
 // export default
 export default async function TestPage() {
   // generando string xml con información relacionada con la base de datos

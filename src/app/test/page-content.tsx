@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/resizable"; // Components for creating resizable layouts
 import { Button } from "@/components/ui/button"; // Button component
 // Local components and mocks
-import Diagrama from "./components/Diagrama"; // Component for displaying diagrams
+import Diagrama from "../../components/reactflow/xml-diagram"; // Component for displaying diagrams
 import { conversationMock } from "@/mocks/conversation"; // Mock data for conversation
-import Chat from "./components/Chat"; // Component for chat interface
+import Chat from "./sections/chat-panel"; // Component for chat interface
+import DiagramPanel from "./sections/diagram-panel";
+import TextPanel from "./sections/text-panel";
 
 export default function PageContent({ xmlString }) {
   const [showEspacio1, setShowEspacio1] = useState(true);
@@ -38,27 +40,7 @@ export default function PageContent({ xmlString }) {
             <ResizablePanelGroup direction="vertical">
               {/* Espacio 2 Panel (equivalente a Diagram Panel) */}
               <ResizablePanel defaultSize={70} minSize={30}>
-                <div className="flex flex-col h-full">
-                  <div className="p-4 border-b flex justify-between items-center">
-                    <h2 className="text-lg font-medium">
-                      Panel Superior Derecho
-                    </h2>
-                    {!showEspacio1 && (
-                      <Button
-                        variant="ghost"
-                        size="sm" // Cambiado a sm para que quepa mejor si hay más botones
-                        onClick={() => setShowEspacio1(true)}
-                        aria-label="Mostrar Espacio 1"
-                      >
-                        <ChevronDown className="h-4 w-4 mr-2" />
-                        Mostrar Panel Izquierdo
-                      </Button>
-                    )}
-                  </div>
-                  <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-                    <Diagrama xmlString={xmlString} />
-                  </div>
-                </div>
+                <DiagramPanel xmlString={xmlString} showEspacio1={showEspacio1} setShowEspacio1={setShowEspacio1} />
               </ResizablePanel>
 
               {/* Espacio 3 Panel (equivalente a Schema Panel) */}
@@ -66,24 +48,7 @@ export default function PageContent({ xmlString }) {
                 <>
                   <ResizableHandle withHandle />
                   <ResizablePanel defaultSize={30} minSize={20}>
-                    <div className="flex flex-col h-full border-t">
-                      <div className="p-4 border-b flex justify-between items-center">
-                        <h2 className="text-lg font-medium">
-                          Panel Inferior Derecho
-                        </h2>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setShowEspacio3(false)}
-                          aria-label="Ocultar Espacio 3"
-                        >
-                          <ChevronUp className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-                        <h1>Espacio 3</h1>
-                      </div>
-                    </div>
+                    <TextPanel setShowEspacio3={setShowEspacio3} />
                   </ResizablePanel>
                 </>
               )}
