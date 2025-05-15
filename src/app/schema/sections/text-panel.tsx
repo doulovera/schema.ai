@@ -1,19 +1,15 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronUp } from "lucide-react";
 import TabTextSelector from "@/components/chat/tab-text-selector";
+import { ChatContext } from "@/context/chat/ChatContext";
 interface TextPanelProps {
   setShowEspacio3: (show: boolean) => void;
 }
 
-const tabs = [
-  { type: "SQL", text: "hola mundo from sql" },
-  { type: "MongoDB", text: "hola mundo from mongo db" },
-];
-
 export default function TextPanel({ setShowEspacio3 }: TextPanelProps) {
   const [activeTab, setActiveTab] = useState(0);
-
+  const { scripts } = useContext(ChatContext);
   return (
     <div className="flex flex-col h-full border-t border-border bg-card text-foreground">
       <div className="p-4 border-b border-border flex justify-between items-center">
@@ -29,19 +25,21 @@ export default function TextPanel({ setShowEspacio3 }: TextPanelProps) {
       </div>
       <div className="flex flex-col p-4">
         <div className="flex w-full">
-          {tabs.map((tab, index) => (
-            <TabTextSelector
-              key={tab.type}
-              tabIndex={index}
-              setActiveTab={setActiveTab}
-              activeTab={activeTab}
-              tab={tab}
-            />
-          ))}
+          {scripts.map(
+            (script: { type: string; text: string }, index: number) => (
+              <TabTextSelector
+                key={script.type}
+                tabIndex={index}
+                setActiveTab={setActiveTab}
+                activeTab={activeTab}
+                tab={script}
+              />
+            )
+          )}
         </div>
         <textarea
           className="w-full h-40 p-2 border border-border rounded-b-md rounded-t-none bg-muted text-foreground resize-none -mt-1"
-          value={tabs[activeTab].text}
+          value={scripts[activeTab].text}
           readOnly
         />
       </div>

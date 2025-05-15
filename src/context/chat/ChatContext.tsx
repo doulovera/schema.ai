@@ -13,14 +13,20 @@ type ChatProviderProps = {
 };
 // context provider
 export const ChatProvider = ({ children }: ChatProviderProps) => {
+  const scripts = [
+    { type: "SQL", text: "hola mundo from sql" },
+    { type: "MongoDB", text: "hola mundo from mongo db" },
+  ];
   const [xml, setXml] = useState("");
   const [conversation, conversationDispatch] = useReducer(
     conversationReducer,
     createConversation()
   );
-
+  // returning provider
   return (
-    <ChatContext.Provider value={{ xml, conversation, conversationDispatch }}>
+    <ChatContext.Provider
+      value={{ xml, conversation, conversationDispatch, scripts }}
+    >
       {children}
     </ChatContext.Provider>
   );
