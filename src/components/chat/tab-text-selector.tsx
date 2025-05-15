@@ -3,7 +3,7 @@ export default function TabTextSelector({setActiveTab, activeTab, tab, tabIndex}
     <button
       key={tab.type}
       onClick={() => setActiveTab(tabIndex)}
-      className={`flex-1 py-2 px-4 text-sm font-medium border border-border border-b-0 rounded-t-md transition-colors
+      className={`flex-1 py-2 px-4 text-sm font-medium border border-border border-b-0 transition-colors
                 ${
                   activeTab === tabIndex
                     ? "bg-muted text-foreground"
@@ -17,9 +17,7 @@ export default function TabTextSelector({setActiveTab, activeTab, tab, tabIndex}
       }}
       type="button"
     >
-      {
-        tab.text
-      }
+      {tab.type}
     </button>
   );
 }
