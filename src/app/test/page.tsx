@@ -1,9 +1,12 @@
-import { generateXML } from "@/lib/gemini-utils";
+import { useContext } from "react";
 import PageContent from "./page-content";
+import { ChatContext, ChatProvider } from "@/context/chat/ChatContext";
 // export default
 export default async function TestPage() {
-  // generando string xml con información relacionada con la base de datos
-  const xmlString = await generateXML();
   // Page
-  return <PageContent xmlString={xmlString} />;
+  return (
+    <ChatProvider>
+      <PageContent />
+    </ChatProvider>
+  );
 }

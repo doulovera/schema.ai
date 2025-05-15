@@ -18,7 +18,7 @@ export default function Chat({ conversation, setShowEspacio1 }) {
         </Button>
       </div>
       <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full w-full">
           <div className="flex-1 overflow-auto p-4">
             <ConversationView messages={conversation.messages} />
           </div>
