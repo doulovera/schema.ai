@@ -1,26 +1,24 @@
 "use client";
 
 // React and Next.js core imports
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { ChatContext } from "@/context/chat/ChatContext";
 // UI components and icons
 import { ChevronDown, ChevronUp } from "lucide-react"; // Icons for UI elements
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/ui/resizable"; // Components for creating resizable layouts
-import { Button } from "@/components/ui/button"; // Button component
-// Local components and mocks
-import Diagrama from "../../components/reactflow/xml-diagram"; // Component for displaying diagrams
-import { conversationMock } from "@/mocks/conversation"; // Mock data for conversation
-import Chat from "./sections/chat-panel"; // Component for chat interface
+} from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import Chat from "./sections/chat-panel";
 import DiagramPanel from "./sections/diagram-panel";
 import TextPanel from "./sections/text-panel";
 
-export default function PageContent({ xmlString }) {
+export default function PageContent() {
   const [showEspacio1, setShowEspacio1] = useState(true);
   const [showEspacio3, setShowEspacio3] = useState(true);
-  const conversation = conversationMock
+  const { conversation } = useContext(ChatContext);
   return (
     <div className="flex flex-col h-screen">
       <div className="flex-1 overflow-hidden">
@@ -29,7 +27,10 @@ export default function PageContent({ xmlString }) {
           {showEspacio1 && (
             <>
               <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-                <Chat setShowEspacio1={setShowEspacio1} conversation={conversation} />
+                <Chat
+                  setShowEspacio1={setShowEspacio1}
+                  conversation={conversation}
+                />
               </ResizablePanel>
               <ResizableHandle withHandle />
             </>
@@ -40,7 +41,10 @@ export default function PageContent({ xmlString }) {
             <ResizablePanelGroup direction="vertical">
               {/* Espacio 2 Panel (equivalente a Diagram Panel) */}
               <ResizablePanel defaultSize={70} minSize={30}>
-                <DiagramPanel xmlString={xmlString} showEspacio1={showEspacio1} setShowEspacio1={setShowEspacio1} />
+                <DiagramPanel
+                  showEspacio1={showEspacio1}
+                  setShowEspacio1={setShowEspacio1}
+                />
               </ResizablePanel>
 
               {/* Espacio 3 Panel (equivalente a Schema Panel) */}
