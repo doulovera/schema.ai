@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { createContext, useState, useReducer } from "react";
 import { createConversation } from "@/lib/chat-utils";
 import conversationReducer from "@/reducers/chat-reducer";
-import { generateXML } from "@/lib/gemini-utils";
 // creating context
 export const ChatContext = createContext({});
 // ChatProviderProps
@@ -22,10 +21,12 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
     conversationReducer,
     createConversation()
   );
+
+  const [conversationHistory, setConversationHistory] = useState<{ role: string; content: string }[]>([]);
   // returning provider
   return (
     <ChatContext.Provider
-      value={{ xml, conversation, conversationDispatch, scripts }}
+      value={{ xml, conversation, conversationDispatch, scripts, conversationHistory, setConversationHistory, setXml }}
     >
       {children}
     </ChatContext.Provider>
