@@ -3,7 +3,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
 import { generateJsonFromDescription } from "@/lib/gemini";
-import { createThread, updateThread } from '@/lib/thread';
+import { createThread, updateThread, getThread } from '@/lib/thread';
 
 /**
  * "chat" is the item of the conversations
@@ -23,7 +23,8 @@ interface ChatStore {
   isLoading: boolean,
 
   addMessageToChat: (role: typeof ROLES[keyof typeof ROLES], message: string) => void,
-  createNewConversation: (message: string) => Promise<void>,
+  handleSendMessage: (message: string, chatId: string) => Promise<void>, 
+  loadChatThread: (chatId: string) => Promise<void>; // Add new function for loading thread
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -46,81 +47,92 @@ export const useChatStore = create<ChatStore>()(
         }
         set({ chatHistory: [...(chatHistory || []), newMessage] })
       },
-      createNewConversation: async (message: string) => {
-        const { addMessageToChat, chatHistory } = get()
+      handleSendMessage: async (message: string, chatId: string) => {
+        const { addMessageToChat } = get(); // Get only necessary functions initially
+        addMessageToChat(ROLES.user, message);
+        set({ isLoading: true, chatId });
 
-        addMessageToChat(ROLES.user, message)
-
-        set({ isLoading: true })
-        const response = await generateJsonFromDescription(message)
+        const response = await generateJsonFromDescription(message);
 
         if (response) {
-          addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!')
-
-          const chatId = crypto.randomUUID()
-
-          const diagram = JSON.stringify(response)
+          addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!');
+          const newDiagram = JSON.stringify(response);
 
           set({
-            chatId,
-            chatDiagram: diagram,
-            isLoading: false
-          })
+            chatDiagram: newDiagram,
+            isLoading: false, // Set isLoading to false here after UI-related updates
+          });
 
           try {
-            await createThread({
-              chat_id: chatId,
-              diagram: diagram,
-              schemas: {
-                sql: '',
-                mongodb: ''
-              },
-              conversation: chatHistory || [],
-            })
+            // Get the latest chatHistory from the store *after* all messages for this turn are added
+            const latestChatHistory = get().chatHistory || [];
+            const existingThread = await getThread(chatId);
+
+            if (existingThread) {
+              await updateThread(chatId, {
+                conversation: latestChatHistory, // Use latest chat history
+                diagram: newDiagram,
+              });
+            } else {
+              await createThread({
+                chat_id: chatId,
+                diagram: newDiagram,
+                schemas: {
+                  sql: '', 
+                  mongodb: '' 
+                },
+                conversation: latestChatHistory, // Use latest chat history
+              });
+            }
           } catch (error) {
-            console.error('Error creating thread:', error)
+            console.error('Error handling thread:', error);
+            // Optionally set an error state in the store
           }
+        } else {
+          // If diagram generation fails or returns no response
+          set({ isLoading: false });
         }
       },
-      sendMessageToConversation: async (message: string, chatId: string) => {
-        const { addMessageToChat, chatHistory } = get()
-        addMessageToChat(ROLES.user, message)
 
-        set({ isLoading: true })
-        const response = await generateJsonFromDescription(message)
-
-        if (response) {
-          addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!')
-          const diagram = JSON.stringify(response)
-
-          set({
-            chatDiagram: diagram,
-            isLoading: false
-          })
-
-          try {
-            await updateThread(chatId, {
-              conversation: [
-                ...(chatHistory || []),
-                {
-                  id: Date.now().toString(),
-                  role: ROLES.assistant,
-                  content: '¡Diagrama generado exitosamente!',
-                  timestamp: Date.now(),
-                }
-              ],
-              diagram,
-            })
-
-          } catch (error) {
-            console.error('Error updating thread:', error)
-          }
+      loadChatThread: async (chatId: string) => {
+        const currentStoreState = get();
+        // Prevent re-fetching if data for this chatId is already loaded and seems complete,
+        // or if a load is already in progress for this exact chatId.
+        if (currentStoreState.isLoading && currentStoreState.chatId === chatId) return;
+        if (currentStoreState.chatId === chatId && currentStoreState.chatHistory !== null) {
+          return;
         }
-      }
+
+        set({ isLoading: true, chatId: chatId, chatHistory: null, chatDiagram: null, chatSchemas: null });
+        try {
+          const threadData = await getThread(chatId);
+          if (threadData) {
+            set({
+              chatHistory: threadData.conversation,
+              chatDiagram: threadData.diagram,
+              chatSchemas: threadData.schemas ? JSON.stringify(threadData.schemas) : null,
+              chatId: threadData.chat_id, // Ensure this is set from loaded data
+              isLoading: false,
+            });
+          } else {
+            // Thread not found in DB, reset relevant store fields for this chatId
+            set({
+              chatHistory: null,
+              chatDiagram: null,
+              chatSchemas: null,
+              // chatId is already set from the parameter
+              isLoading: false,
+            });
+          }
+        } catch (error) {
+          console.error('Error loading thread:', error);
+          set({ isLoading: false, chatId: chatId, chatHistory: null, chatDiagram: null, chatSchemas: null }); // Reset on error
+        }
+      },
     }),
     {
       name: 'chat-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
 )

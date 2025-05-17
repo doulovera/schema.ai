@@ -3,16 +3,23 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatStore } from "@/stores/chat";
+import { useParams } from 'next/navigation';
 
 export function ChatInput() {
-  const { createNewConversation } = useChatStore();
+  const { handleSendMessage } = useChatStore();
+  const params = useParams();
+  const chatId = params.id as string;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const message = (e.currentTarget.elements[0] as HTMLInputElement).value;
-    if (!message.trim()) return;
+    const form = e.currentTarget;
+    const inputElement = form.elements[0] as HTMLInputElement;
+    const message = inputElement.value;
 
-    await createNewConversation(message);
+    if (!message.trim() || !chatId) return;
+
+    await handleSendMessage(message, chatId);
+    form.reset(); // Clear the input field
   };
 
   return (

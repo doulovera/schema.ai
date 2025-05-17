@@ -1,10 +1,9 @@
 'use server';
 
 import Thread, { IThread } from "@/models/Thread";
-import dbConnect from "./db";
 
 export async function createThread(data: Partial<IThread>) {
-  const thread = await Thread.create({
+  const newThread = await Thread.create({
     chat_id: data.chat_id,
     diagram: data.diagram,
     schemas: {
@@ -12,20 +11,26 @@ export async function createThread(data: Partial<IThread>) {
       mongodb: data.schemas?.mongodb
     },
     conversation: data.conversation
-  })
-  return true;
+  });
+  return JSON.parse(JSON.stringify(newThread));
 }
 
-export async function getThread(chatId: string) {
-  const thread = await Thread.findOne({ chat_id: chatId });
-  return true;
+export async function getThread(chatId: string): Promise<IThread | null> {
+  const foundThread = await Thread.findOne({ chat_id: chatId });
+  if (!foundThread) {
+    return null;
+  }
+  return JSON.parse(JSON.stringify(foundThread));
 }
 
 export async function updateThread(chatId: string, data: Partial<IThread>) {
-  const thread = await Thread.findOneAndUpdate(
+  const updatedThread = await Thread.findOneAndUpdate(
     { chat_id: chatId },
     { $set: data },
     { new: true }
   );
-  return true;
+  if (!updatedThread) {
+    return null;
+  }
+  return JSON.parse(JSON.stringify(updatedThread));
 }
