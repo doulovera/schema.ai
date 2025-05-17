@@ -1,49 +1,23 @@
 "use client"
 
-import type React from "react";
-import { ChatContext } from "@/context/chat/ChatContext";
-import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { generateXML } from "@/lib/gemini-utils";
+import { useChatStore } from "@/stores/chat";
 
 export function ChatInput() {
-  const [input, setInput] = useState("");
-  const { setConversationHistory, setXml } = useContext(ChatContext);
+  const { createNewChat } = useChatStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    const message = (e.currentTarget.elements[0] as HTMLInputElement).value;
+    if (!message.trim()) return;
 
-    // Handle submission logic here
-    setConversationHistory((prev) => [
-      ...prev,
-      { role: "user", content: input },
-    ]);
-
-    const response = await generateXML(input); // fetch(api)
-    // const response = "test"
-
-    if (response) {
-      setXml(response);
-      setConversationHistory((prev) => [
-        ...prev,
-        { role: "assistant", content: "Generado." },
-      ]);
-    } else {
-      setConversationHistory((prev) => [
-        ...prev,
-        { role: "assistant", content: "Error generating XML" },
-      ]);
-    }
-    setInput("");
+    await createNewChat(message);
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
       <Input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
         placeholder="Write your specifications..."
         className="flex-1"
       />

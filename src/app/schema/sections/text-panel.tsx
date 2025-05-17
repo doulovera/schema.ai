@@ -1,23 +1,19 @@
-import { useState, useContext } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import TabTextSelector from "@/components/chat/tab-text-selector";
-import { ChatContext } from "@/context/chat/ChatContext";
-interface TextPanelProps {
-  setShowEspacio3: (show: boolean) => void;
-}
 
-export default function TextPanel({ setShowEspacio3 }: TextPanelProps) {
+export default function TextPanel({ hidePanel }: {  hidePanel: () => void }) {
   const [activeTab, setActiveTab] = useState(0);
-  const { scripts } = useContext(ChatContext);
+  const scripts = [{ type: "SQL", text: "hola mundo from sql" }, { type: "MongoDB", text: "hola mundo from mongo db" }];
   return (
     <div className="flex flex-col h-full border-t border-border bg-card text-foreground">
       <div className="p-4 border-b border-border flex justify-between items-center">
-        <h2 className="text-lg font-medium">Panel Inferior Derecho</h2>
+        <h2 className="text-lg font-medium">Schemas</h2>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setShowEspacio3(false)}
+          onClick={hidePanel}
           aria-label="Ocultar Espacio 3"
         >
           <ChevronUp className="h-4 w-4" />
@@ -25,7 +21,7 @@ export default function TextPanel({ setShowEspacio3 }: TextPanelProps) {
       </div>
       <div className="flex flex-col p-4">
         <div className="flex w-full">
-          {scripts.map(
+          {scripts?.map(
             (script: { type: string; text: string }, index: number) => (
               <TabTextSelector
                 key={script.type}
@@ -39,7 +35,7 @@ export default function TextPanel({ setShowEspacio3 }: TextPanelProps) {
         </div>
         <textarea
           className="w-full h-40 p-2 border border-border rounded-b-md rounded-t-none bg-muted text-foreground resize-none -mt-1"
-          value={scripts[activeTab].text}
+          value={scripts[activeTab]?.text}
           readOnly
         />
       </div>

@@ -1,39 +1,37 @@
 "use client";
-import { useReducer, useContext, useEffect } from "react";
+import { useReducer, useEffect } from "react";
 import React from "react";
 import {
   ReactFlow,
   Background,
   Controls,
-  applyNodeChanges,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import CustomNode from "./custom-node";
-import { ChatContext } from "@/context/chat/ChatContext";
 import { nodesReducer } from "@/reducers/reactflow-node-reducer";
 import { parseXmlToObject } from "@/lib/parse-utils";
+import { useChatStore } from "@/stores/chat";
 
 const nodeTypes = {
   test: CustomNode,
 };
 
 const Diagrama = () => {
-  const { xml } = useContext(ChatContext);
+  const { chatDiagram } = useChatStore();
   const [nodes, dispatch] = useReducer(nodesReducer, []);
 
   useEffect(() => {
-    if (!xml) {
+    if (!chatDiagram) {
       dispatch({ type: "INIT_NODES", payload: [] });
       return;
     }
 
-    const tables: any = parseXmlToObject(xml);
+    const tables: any = parseXmlToObject(chatDiagram);
 
     dispatch({ type: "INIT_NODES", payload: tables });
-  }, [xml]);
+  }, [chatDiagram]);
 
-  // Función para manejar cambios en nodos (drag, selección, etc)
-  const onNodesChange = React.useCallback((changes) => {
+  const onNodesChange = React.useCallback((changes: any) => {
     dispatch({ type: "UPDATE_NODES", payload: { changes } });
   }, []);
 

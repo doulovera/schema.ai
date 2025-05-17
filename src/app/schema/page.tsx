@@ -1,11 +1,7 @@
-import PageContent from "./page-content";
-import { ChatProvider } from "@/context/chat/ChatContext";
-// export default
+import PageContent from "./[id]/page-content";
+
 export default async function TestPage() {
-  // Page
   return (
-    <ChatProvider>
-      <PageContent />
-    </ChatProvider>
+    <PageContent />
   );
 }
