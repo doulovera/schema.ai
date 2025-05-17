@@ -9,14 +9,14 @@ import {
 import "@xyflow/react/dist/style.css";
 import CustomNode from "./custom-node";
 import { nodesReducer } from "@/reducers/reactflow-node-reducer";
-import { parseXmlToObject } from "@/lib/parse-utils";
+import { parseJsonToObject } from "@/lib/parse-utils";
 import { useChatStore } from "@/stores/chat";
 
 const nodeTypes = {
   test: CustomNode,
 };
 
-const Diagrama = () => {
+export function Diagram () {
   const { chatDiagram } = useChatStore();
   const [nodes, dispatch] = useReducer(nodesReducer, []);
 
@@ -26,7 +26,7 @@ const Diagrama = () => {
       return;
     }
 
-    const tables: any = parseXmlToObject(chatDiagram);
+    const tables: any = parseJsonToObject(chatDiagram);
 
     dispatch({ type: "INIT_NODES", payload: tables });
   }, [chatDiagram]);
@@ -48,5 +48,3 @@ const Diagrama = () => {
     </ReactFlow>
   );
 };
-
-export default Diagrama;

@@ -2,7 +2,7 @@ import type { ConversationHistory } from '@/types/chat'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-import { generateXmlFromDescription } from "@/lib/gemini";
+import { generateJsonFromDescription } from "@/lib/gemini";
 import { createThread, updateThread } from '@/lib/thread';
 
 /**
@@ -52,23 +52,25 @@ export const useChatStore = create<ChatStore>()(
         addMessageToChat(ROLES.user, message)
 
         set({ isLoading: true })
-        const response = await generateXmlFromDescription(message)
+        const response = await generateJsonFromDescription(message)
 
         if (response) {
           addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!')
 
           const chatId = crypto.randomUUID()
 
+          const diagram = JSON.stringify(response)
+
           set({
             chatId,
-            chatDiagram: response,
+            chatDiagram: diagram,
             isLoading: false
           })
 
           try {
             await createThread({
               chat_id: chatId,
-              diagram: response,
+              diagram: diagram,
               schemas: {
                 sql: '',
                 mongodb: ''
@@ -85,13 +87,14 @@ export const useChatStore = create<ChatStore>()(
         addMessageToChat(ROLES.user, message)
 
         set({ isLoading: true })
-        const response = await generateXmlFromDescription(message)
+        const response = await generateJsonFromDescription(message)
 
         if (response) {
           addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!')
+          const diagram = JSON.stringify(response)
 
           set({
-            chatDiagram: response,
+            chatDiagram: diagram,
             isLoading: false
           })
 
@@ -106,7 +109,7 @@ export const useChatStore = create<ChatStore>()(
                   timestamp: Date.now(),
                 }
               ],
-              diagram: response,
+              diagram,
             })
 
           } catch (error) {

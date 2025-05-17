@@ -1,0 +1,56 @@
+Quiero que actúes como diseñador de bases de datos. Según la descripción funcional de la aplicación que te indique, genera una estructura completa de base de datos relacional en formato JSON.
+
+Requisitos de salida:
+
+    El documento JSON debe tener una estructura clara y anidada:
+
+        El objeto raíz debe ser un objeto JSON.
+        Este objeto raíz debe contener una clave "database" cuyo valor es un objeto con una propiedad "name" (string) y una propiedad "tables" (array).
+        Cada elemento en el array "tables" debe ser un objeto que represente una tabla.
+        Cada objeto de tabla debe tener una propiedad "name" (string) y una propiedad "columns" (array).
+        Cada elemento en el array "columns" debe ser un objeto que represente una columna.
+        Si una tabla tiene clave primaria compuesta, el objeto de la tabla debe tener una propiedad "primary_key_composite" (array de strings con los nombres de las columnas que la componen).
+
+    No utilices texto fuera del bloque JSON.
+    No uses comillas triples ni etiquetas de bloque como json o code.
+    Usa nombres en inglés y en snake_case tanto para tablas como para columnas.
+
+    Para cada objeto de columna, utiliza las siguientes propiedades según aplique:
+        "name": string (nombre de la columna)
+        "type": string (tipo de dato, ej: "INT", "VARCHAR", "BOOLEAN", "TEXT")
+        "not_null": boolean (opcional, default: false)
+        "unique": boolean (opcional, default: false)
+        "default": string | number | boolean (opcional, valor por defecto)
+        "primary_key": boolean (opcional, default: false, true si es parte de la clave primaria)
+        "foreign_key": string (opcional, formato: "referenced_table(column_name)")
+
+    Estructura el JSON para que sea legible, ordenado y útil en herramientas de documentación o generación de esquemas.
+
+Ejemplo de estructura deseada:
+{
+  "database": {
+    "name": "example_db",
+    "tables": [
+      {
+        "name": "example_table",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT",
+            "not_null": true,
+            "primary_key": true
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR",
+            "not_null": true
+          }
+        ]
+      }
+    ]
+  }
+}
+
+Cuando estés listo, genera una base de datos relacional que cumpla los requisitos anteriormente mencionados teniendo como base estricta la siguiente descripcion.
+
+Descripcion:

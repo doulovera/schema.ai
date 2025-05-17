@@ -1,72 +1,52 @@
-import convert from "xml-js";
+"use client";
 
 export type Column = {
   name: string;
   type: string;
-  not_null: boolean;
-  unique: boolean;
-  primary_key: boolean;
-  foreign_key: string | null;
+  not_null?: boolean; // Changed to optional
+  unique?: boolean;   // Changed to optional
+  primary_key?: boolean; // Changed to optional
+  foreign_key?: string | null; // Changed to optional
+  default?: string | number | boolean; // Added default property
 };
 
 export type Table = {
   name: string;
   columns: Column[];
+  primary_key_composite?: string[]; // Added for composite primary keys
 };
 
-export function parseXmlToObject(xmlString: string): Table[] {
-  if (!xmlString) return [];
+export type DatabaseSchema = {
+  database: {
+    name: string;
+    tables: Table[];
+  };
+};
+
+export function parseJsonToObject(jsonString: string): Table[] {
+  if (!jsonString) return [];
 
   try {
-    const obj = convert.xml2js(xmlString, { compact: false });
+    const schema: DatabaseSchema = JSON.parse(jsonString);
+    console.log({schema})
 
-    if (
-      !obj ||
-      !obj.elements ||
-      obj.elements.length === 0 ||
-      obj.elements[0].name !== "database"
-    ) {
-      console.error("Estructura XML inválida.");
+    if (!schema || !schema.database || !schema.database.tables) {
+      console.error("Estructura JSON inválida.");
       return [];
     }
 
-    const tables = obj.elements[0].elements.filter(
-      (el: any) => el.name === "table"
-    );
-
-    return tables.map((table: any, index: number) => {
-      const tableName = table.attributes?.name || `table_${index}`;
-
-      const columnElements = (table.elements || []).filter(
-        (e: any) => e.name === "column"
-      );
-
-      const primaryKeyGroup = (table.elements || []).find(
-        (e: any) => e.name === "primary_key"
-      );
-
-      const primaryKeyColumns = (primaryKeyGroup?.elements || []).map(
-        (col: any) => col.attributes?.name
-      );
-
-      const columns: Column[] = columnElements.map((col: any) => ({
-        name: col.attributes?.name || "unnamed_column",
-        type: col.attributes?.type || "unknown",
-        not_null: col.attributes?.not_null === "true",
-        unique: col.attributes?.unique === "true",
-        primary_key:
-          col.attributes?.primary_key === "true" ||
-          primaryKeyColumns.includes(col.attributes?.name),
-        foreign_key: col.attributes?.foreign_key || null,
-      }));
-
-      return {
-        name: tableName,
-        columns,
-      };
-    });
+    return schema.database.tables.map(table => ({
+      ...table,
+      columns: table.columns.map(column => ({
+        ...column,
+        not_null: column.not_null === undefined ? false : column.not_null, // default to false if undefined
+        unique: column.unique === undefined ? false : column.unique,       // default to false if undefined
+        primary_key: column.primary_key === undefined ? false : column.primary_key, // default to false if undefined
+        foreign_key: column.foreign_key === undefined ? null : column.foreign_key, // default to null if undefined
+      })),
+    }));
   } catch (error) {
-    console.error("Error al procesar el XML:", error);
+    console.error("Error al procesar el JSON:", error);
     return [];
   }
 }

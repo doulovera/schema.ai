@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Diagrama from "@/components/reactflow/xml-diagram";
+import { Diagram } from "@/components/reactflow/diagram";
 
 export default function DiagramPanel({
   chatPanelIsShown,
@@ -26,7 +26,7 @@ export default function DiagramPanel({
         )}
       </div>
       <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-        <Diagrama />
+        <Diagram />
       </div>
     </div>
   );
