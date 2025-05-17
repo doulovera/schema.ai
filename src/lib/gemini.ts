@@ -18,5 +18,7 @@ export async function generateXmlFromDescription(description: string): Promise<s
     contents: `${prompt} "${description}"`,
   });
 
+  // TODO: handle "503 Service Unavailable" error - use retry logic with other model
+
   return response.text || "";
 }

@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
 import { generateXmlFromDescription } from "@/lib/gemini";
+import { createThread, updateThread } from '@/lib/thread';
 
 /**
  * "chat" is the item of the conversations
@@ -22,7 +23,7 @@ interface ChatStore {
   isLoading: boolean,
 
   addMessageToChat: (role: typeof ROLES[keyof typeof ROLES], message: string) => void,
-  createNewChat: (message: string) => Promise<void>,
+  createNewConversation: (message: string) => Promise<void>,
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -45,24 +46,74 @@ export const useChatStore = create<ChatStore>()(
         }
         set({ chatHistory: [...(chatHistory || []), newMessage] })
       },
-      createNewChat: async (message: string) => {
-        const { addMessageToChat } = get()
+      createNewConversation: async (message: string) => {
+        const { addMessageToChat, chatHistory } = get()
 
         addMessageToChat(ROLES.user, message)
-        // store in DB
 
         set({ isLoading: true })
         const response = await generateXmlFromDescription(message)
 
         if (response) {
           addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!')
-          // store in DB
+
+          const chatId = crypto.randomUUID()
+
+          set({
+            chatId,
+            chatDiagram: response,
+            isLoading: false
+          })
+
+          try {
+            await createThread({
+              chat_id: chatId,
+              diagram: response,
+              schemas: {
+                sql: '',
+                mongodb: ''
+              },
+              conversation: chatHistory || [],
+            })
+          } catch (error) {
+            console.error('Error creating thread:', error)
+          }
+        }
+      },
+      sendMessageToConversation: async (message: string, chatId: string) => {
+        const { addMessageToChat, chatHistory } = get()
+        addMessageToChat(ROLES.user, message)
+
+        set({ isLoading: true })
+        const response = await generateXmlFromDescription(message)
+
+        if (response) {
+          addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!')
+
           set({
             chatDiagram: response,
             isLoading: false
           })
+
+          try {
+            await updateThread(chatId, {
+              conversation: [
+                ...(chatHistory || []),
+                {
+                  id: Date.now().toString(),
+                  role: ROLES.assistant,
+                  content: '¡Diagrama generado exitosamente!',
+                  timestamp: Date.now(),
+                }
+              ],
+              diagram: response,
+            })
+
+          } catch (error) {
+            console.error('Error updating thread:', error)
+          }
         }
-      },
+      }
     }),
     {
       name: 'chat-storage',
