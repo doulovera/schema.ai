@@ -1,45 +1,34 @@
-import type { ConversationHistory, Roles } from '@/types/chat'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-
+import type { Roles, Message } from '@/types/chat'
 import {
-  compareJsonSchemas,
+  sendUserMessage,
   normalizeChat,
-  initializeChat,
-} from "@/lib/gemini";
-import { createThread, updateThread, getThread } from "@/lib/thread";
-import type { Chat } from "@google/genai";
-
-/**
- * "chat" is the item of the conversations
- */
+  compareJsonSchemas,
+} from '@/lib/gemini'
+import { updateThread, getThread, createThread } from '@/lib/thread'
 
 const ROLES: Record<string, Roles> = {
-  user: "user",
-  assistant: "model",
-};
+  user: 'user',
+  assistant: 'model',
+}
 
 interface ChatStore {
-  modelChat: Chat | null;
-  conversations: string[]; // Array of chat IDs
-  chatHistory: ConversationHistory[] | null;
-  chatId: string | null;
-  chatDiagram: string | null;
-  chatSchemas: string | null;
-  isLoading: boolean;
+  conversations: string[]
+  chatHistory: Message[] | null
+  chatId: string | null
+  chatDiagram: string | null
+  chatSchemas: string | null
+  isLoading: boolean
 
-  addMessageToChat: (
-    role: Roles,
-    message: string
-  ) => void;
-  handleSendMessage: (message: string, chatId: string) => Promise<void>;
-  loadChatThread: (chatId: string) => Promise<void>; // Add new function for loading thread
+  addMessageToChat: (role: Roles, text: string, diagram?: string) => void
+  handleSendMessage: (messageText: string, chatId: string) => Promise<void>
+  loadChatThread: (chatId: string) => Promise<void>
 }
 
 export const useChatStore = create<ChatStore>()(
   persist(
     (set, get) => ({
-      modelChat: null,
       conversations: [],
       chatHistory: null,
       chatId: null,
@@ -47,195 +36,129 @@ export const useChatStore = create<ChatStore>()(
       chatSchemas: null,
       isLoading: false,
 
-      addMessageToChat: (
-        role: Roles,
-        message: string
-      ) => {
-        const { chatHistory } = get();
-        const newMessage = {
+      addMessageToChat: (role: Roles, text: string, diagram?: string) => {
+        const { chatHistory } = get()
+        const newMessage: Message = {
           id: Date.now().toString(),
           role,
-          content: message,
+          message: text, // Textual content (e.g., user query, AI summary)
+          diagram: diagram || '', // Diagram JSON string, if this message includes/is a diagram
           timestamp: Date.now(),
-        };
-        set({ chatHistory: [...(chatHistory || []), newMessage] });
+        }
+        set({ chatHistory: [...(chatHistory || []), newMessage] })
       },
 
-      handleSendMessage: async (message: string, chatId: string) => {
-        const { addMessageToChat, chatDiagram: currentChatDiagram } = get();
-        addMessageToChat(ROLES.user, message);
-        set({ isLoading: true, chatId });
+      handleSendMessage: async (messageText: string, chatId: string) => {
+        const {
+          addMessageToChat,
+          chatHistory: currentLocalHistory,
+          chatDiagram: currentDiagramInStore,
+        } = get()
 
-        const initialResponse = await generateJsonFromDescription(message);
+        addMessageToChat(ROLES.user, messageText)
+        set({ isLoading: true, chatId })
 
-        if (
-          initialResponse &&
-          typeof initialResponse === "object" &&
-          !("error" in initialResponse)
-        ) {
-          let newDiagramJson = JSON.stringify(initialResponse);
-          let summaryMessage: string | null = null;
+        const normalizedHistory = await normalizeChat(currentLocalHistory || [])
 
-          if (currentChatDiagram) {
-            try {
-              // Ensure currentChatDiagram and newDiagramJson are valid JSON strings before parsing/comparing
-              const { summary, newSchema } = await compareJsonSchemas(
-                currentChatDiagram,
-                newDiagramJson
-              );
-              if (summary && summary !== "No summary text from Gemini") {
-                summaryMessage = summary;
-              }
-              if (
-                newSchema &&
-                typeof newSchema === "object" &&
-                !("error" in newSchema)
-              ) {
-                newDiagramJson = JSON.stringify(newSchema);
-              } else if (
-                newSchema &&
-                typeof newSchema === "object" &&
-                "error" in newSchema
-              ) {
-                console.error(
-                  "Error in new schema generation:",
-                  (newSchema as { error: string }).error
-                );
-                addMessageToChat(
-                  ROLES.assistant,
-                  `Error al actualizar el diagrama: ${
-                    (newSchema as { error: string }).error
-                  }`
-                );
-              }
-            } catch (error) {
-              console.error("Error comparing JSON schemas:", error);
-              addMessageToChat(
-                ROLES.assistant,
-                "Error al comparar los esquemas del diagrama."
-              );
-            }
-          }
+        try {
+          const { responseText: aiDiagramResponse } = await sendUserMessage(
+            normalizedHistory,
+            messageText,
+          )
 
-          if (summaryMessage) {
-            addMessageToChat(ROLES.assistant, summaryMessage);
-          } else {
-            addMessageToChat(
-              ROLES.assistant,
-              "¡Diagrama generado/actualizado exitosamente!"
-            );
-          }
-
-          set({
-            chatDiagram: newDiagramJson,
-            isLoading: false,
-          });
-
-          try {
-            const latestChatHistory = get().chatHistory || [];
-            const existingThread = await getThread(chatId);
-
-            if (existingThread) {
-              await updateThread(chatId, {
-                conversation: latestChatHistory,
-                diagram: newDiagramJson,
-              });
-            } else {
-              await createThread({
-                chat_id: chatId,
-                diagram: newDiagramJson,
-                schemas: {
-                  sql: "",
-                  mongodb: "",
-                },
-                conversation: latestChatHistory,
-              });
-            }
-          } catch (error) {
-            console.error("Error handling thread:", error);
-            addMessageToChat(
-              ROLES.assistant,
-              "Error al guardar el hilo de conversación."
-            );
-          }
-        } else {
-          let errorMessage = "Hubo un error generando el diagrama.";
+          let summaryForChatMessage = 'Received new diagram.'
           if (
-            initialResponse &&
-            typeof initialResponse === "object" &&
-            "error" in initialResponse
+            currentDiagramInStore &&
+            aiDiagramResponse &&
+            currentDiagramInStore !== aiDiagramResponse
           ) {
-            errorMessage = `Error generando el diagrama: ${
-              (initialResponse as { error: string }).error
-            }`;
+            const comparisonResult = await compareJsonSchemas(
+              currentDiagramInStore,
+              aiDiagramResponse,
+            )
+            summaryForChatMessage = comparisonResult.summary
+          } else if (aiDiagramResponse && !currentDiagramInStore) {
+            summaryForChatMessage = 'Initial diagram generated.'
           }
-          addMessageToChat(ROLES.assistant, errorMessage);
-          set({ isLoading: false });
+
+          addMessageToChat(
+            ROLES.assistant,
+            summaryForChatMessage,
+            aiDiagramResponse,
+          )
+
+          set({ chatDiagram: aiDiagramResponse })
+
+          const thread = await getThread(chatId)
+          if (thread) {
+            const updatedConversationHistory = get().chatHistory || []
+            await updateThread(chatId, {
+              diagram: aiDiagramResponse,
+              conversation: updatedConversationHistory,
+              schemas: {
+                sql: thread.schemas.sql || '',
+                mongodb: thread.schemas.mongodb || '',
+              },
+            })
+          } else {
+            const newThread = await createThread({
+              chat_id: chatId,
+              diagram: aiDiagramResponse,
+              conversation: get().chatHistory || [],
+              schemas: {
+                sql: '',
+                mongodb: '',
+              },
+            })
+            set({ chatId: newThread.chat_id })
+          }
+        } catch (error) {
+          console.error('Error sending message:', error)
+          addMessageToChat(
+            ROLES.assistant,
+            `Sorry, I encountered an error: ${(error as Error).message}`,
+          )
+        } finally {
+          set({ isLoading: false })
         }
       },
 
       loadChatThread: async (chatId: string) => {
-        const currentStoreState = get();
-        // Prevent re-fetching if data for this chatId is already loaded and seems complete,
-        // or if a load is already in progress for this exact chatId.
-        if (currentStoreState.isLoading && currentStoreState.chatId === chatId)
-          return;
-        if (
-          currentStoreState.chatId === chatId &&
-          currentStoreState.chatHistory !== null
-        ) {
-          return;
-        }
-
-        set({
-          isLoading: true,
-          chatId: chatId,
-          chatHistory: null,
-          chatDiagram: null,
-          chatSchemas: null,
-        });
+        set({ isLoading: true })
         try {
-          const threadData = await getThread(chatId);
-          if (threadData) {
-            const normalizedHistory = normalizeChat(threadData.conversation);
-            const chat = initializeChat(normalizedHistory);
+          const thread = await getThread(chatId)
+          if (thread) {
             set({
-              modelChat: chat,
-              chatHistory: threadData.conversation,
-              chatDiagram: threadData.diagram,
-              chatSchemas: threadData.schemas
-                ? JSON.stringify(threadData.schemas)
-                : null,
-              chatId: threadData.chat_id, // Ensure this is set from loaded data
+              chatId: thread.chat_id,
+              chatHistory: thread.conversation,
+              chatDiagram: thread.diagram, // Load the latest overall diagram for the thread
+              chatSchemas: JSON.stringify(thread.schemas), // For display of SQL/MongoDB schemas
               isLoading: false,
-            });
+            })
           } else {
-            // Thread not found in DB, reset relevant store fields for this chatId
             set({
-              modelChat: null,
-              chatHistory: null,
+              chatId,
+              chatHistory: [],
               chatDiagram: null,
               chatSchemas: null,
-              // chatId is already set from the parameter
               isLoading: false,
-            });
+            })
           }
         } catch (error) {
-          console.error("Error loading thread:", error);
+          console.error('Error loading chat thread:', error)
           set({
-            modelChat: null,
-            isLoading: false,
-            chatId: chatId,
-            chatHistory: null,
+            chatId,
+            chatHistory: [],
             chatDiagram: null,
             chatSchemas: null,
-          }); // Reset on error
+            isLoading: false,
+          })
         }
       },
     }),
     {
-      name: "chat-storage",
+      name: 'chat-storage',
       storage: createJSONStorage(() => sessionStorage),
-    }
-  )
-);
+    },
+  ),
+)
