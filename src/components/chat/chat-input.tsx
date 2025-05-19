@@ -1,29 +1,33 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useChatStore } from "@/stores/chat";
+import { useParams } from "next/navigation";
 
 export function ChatInput() {
-  const [input, setInput] = useState("")
+  const { handleSendMessage } = useChatStore();
+  const params = useParams();
+  const chatId = params.id as string;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim()) return
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const inputElement = form.elements[0] as HTMLInputElement;
+    const message = inputElement.value;
 
-    // Handle submission logic here
-    console.log("Submitted:", input)
-    setInput("")
-  }
+    if (!message.trim() || !chatId) return;
+
+    form.reset();
+    await handleSendMessage(message, chatId);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Write your specifications..." className="flex-1" />
+      <Input placeholder="Write your specifications..." className="flex-1" />
       <Button type="submit" size="sm">
         Send
       </Button>
     </form>
-  )
+  );
 }

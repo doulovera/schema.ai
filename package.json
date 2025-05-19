@@ -11,17 +11,21 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.3",
+    "@google/genai": "^0.13.0",
     "@radix-ui/react-slot": "^1.2.2",
     "@radix-ui/react-tabs": "^1.1.11",
     "@xyflow/react": "^12.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.509.0",
+    "mongoose": "^8.15.0",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-resizable-panels": "^3.0.1",
-    "tailwind-merge": "^3.2.0"
+    "tailwind-merge": "^3.2.0",
+    "xml-js": "^1.6.11",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
