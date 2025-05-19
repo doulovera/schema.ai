@@ -1,9 +1,21 @@
 import { ConversationView } from "@/components/chat/conversation-view";
 import { ChatInput } from "@/components/chat/chat-input";
 import { Button } from "@/components/ui/button";
-import { ChevronUp } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useChatStore } from "@/stores/chat";
 
 export default function Chat({ hidePanel }: { hidePanel: () => void }) {
+  const { chatHistory, isLoading } = useChatStore();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [isLoading, chatHistory]);
+
   return (
     <div className="flex flex-col h-full border-r">
       <div className="p-4 border-b flex justify-between items-center">
@@ -14,15 +26,15 @@ export default function Chat({ hidePanel }: { hidePanel: () => void }) {
           onClick={hidePanel}
           aria-label="Ocultar Espacio 1"
         >
-          <ChevronUp className="h-4 w-4" />
+          <ChevronLeft className="" />
         </Button>
       </div>
       <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
         <div className="flex flex-col h-full w-full">
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto px-2 pb-4" ref={scrollRef}>
             <ConversationView />
           </div>
-          <div className="p-4 border-t">
+          <div className="pt-4 px-2 border-t">
             <ChatInput />
           </div>
         </div>

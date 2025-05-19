@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatStore } from "@/stores/chat";
+import { Send } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export function ChatInput() {
-  const { handleSendMessage } = useChatStore();
+  const { handleSendMessage, isLoading } = useChatStore();
   const params = useParams();
   const chatId = params.id as string;
 
@@ -24,9 +25,9 @@ export function ChatInput() {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input placeholder="Write your specifications..." className="flex-1" />
-      <Button type="submit" size="sm">
-        Send
+      <Input placeholder="¿Qué base de datos deseas?" className="flex-1 py-6" disabled={isLoading} required />
+      <Button type="submit" className="p-6 aspect-square" disabled={isLoading}>
+        <Send className="h-4 w-4" />
       </Button>
     </form>
   );

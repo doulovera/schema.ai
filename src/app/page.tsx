@@ -1,6 +1,13 @@
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Database, Sparkles, Code, Zap, Github } from "lucide-react"
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs'
 
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,21 +32,16 @@ export default function LandingPage() {
                 >
                   Features
                 </Link>
-                <Link
-                  href="#how-it-works"
-                  className="flex items-center text-lg font-medium transition-colors hover:text-foreground/80 text-foreground/60"
-                >
-                  How It Works
-                </Link>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/login">
-                <Button variant="outline">Log In</Button>
-              </Link>
-              <Link href="/signup">
-                <Button>Sign Up</Button>
-              </Link>
+              <SignedOut>
+                <SignInButton />
+                <SignUpButton />
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
             </div>
           </div>
         </header>
@@ -47,7 +49,7 @@ export default function LandingPage() {
         <main className="flex-1">
           {/* Hero Section */}
           <section className="relative space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32">
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
             <div className="flex max-w-[64rem] mx-auto flex-col items-center gap-4 text-center">
               <Link
                 href={GITHUB_REPO}
@@ -57,22 +59,21 @@ export default function LandingPage() {
                 Follow along on GitHub
               </Link>
               <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
+                Construye Bases de Datos{" "}
                 <span className="inline-block bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-                  Build Database Schemas
-                </span>{" "}
-                with AI
+                con&nbsp;IA
+                </span>
               </h1>
-              <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-                Generate, visualize, and optimize your database schemas through natural language. No more manual schema
-                design - just describe what you need.
+              <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8 text-balance">
+                Genera, visualiza y optimiza tus esquemas de base de datos a través del lenguaje natural. No más diseño manual de esquemas: solo describe lo que necesitas.
               </p>
               <div className="space-x-4">
-                <Link href="/demo">
-                  <Button className="bg-gradient-to-r from-primary to-purple-500 px-8">Get Started</Button>
+                <Link href="/schema">
+                  <Button className="bg-gradient-to-r from-primary to-purple-500 px-8">Comenzar</Button>
                 </Link>
                 <Link href="#features">
                   <Button variant="outline" className="border-primary/20 px-8 backdrop-blur-sm">
-                    Learn More
+                    Ver más
                   </Button>
                 </Link>
               </div>
@@ -83,8 +84,8 @@ export default function LandingPage() {
           <section className="py-8 md:py-12 lg:py-24">
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
               <div className="overflow-hidden rounded-lg border bg-background shadow-xl">
-                <Image
-                  src="/placeholder.svg?height=600&width=1200"
+                <img
+                  src="https://res.cloudinary.com/dyonw3lkf/image/upload/v1747641488/schema.ai/rf7kuldb0hdbeg2rlzuk.png"
                   width={1200}
                   height={600}
                   alt="Schema.ai product screenshot"
@@ -106,62 +107,52 @@ export default function LandingPage() {
                 Schema.ai provides powerful tools to streamline your database design workflow
               </p>
             </div>
-            <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-3">
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+            <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-2">
+              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Sparkles className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">AI-Powered Generation</CardTitle>
-                  <CardDescription>Generate complete database schemas from natural language descriptions</CardDescription>
+                  <CardTitle className="text-xl">Generación AI-Powered</CardTitle>
+                  <CardDescription>Generación de esquemas de base de datos completos a partir de descripciones en lenguaje natural</CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Database className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">Visual Schema Editor</CardTitle>
-                  <CardDescription>Intuitive visual editor for fine-tuning your database structure</CardDescription>
+                  <CardTitle className="text-xl">Editor Visual de Esquema</CardTitle>
+                  <CardDescription>Editor visual intuitivo para ajustar tu estructura de base de datos</CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Code className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">Code Generation</CardTitle>
-                  <CardDescription>Export your schema to SQL, Prisma, TypeORM, and more</CardDescription>
+                  <CardTitle className="text-xl">Generación de Código</CardTitle>
+                  <CardDescription>¡Exporta tu esquema a SQL, MongoDB y (en un futuro) más!</CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
+              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Zap className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">Performance Optimization</CardTitle>
-                  <CardDescription>AI suggestions for indexes and optimizations</CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm sm:col-span-2 md:col-span-1">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent"></div>
-                <CardHeader>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
-                    <Github className="h-6 w-6 text-white" />
-                  </div>
-                  <CardTitle className="text-xl">Version Control</CardTitle>
-                  <CardDescription>Track changes and collaborate with your team</CardDescription>
+                  <CardTitle className="text-xl">Optimiza el Rendimiento</CardTitle>
+                  <CardDescription>Sugerencias de IA para índices y optimizaciones</CardDescription>
                 </CardHeader>
               </Card>
             </div>
           </section>
 
           {/* How It Works Section */}
-          <section id="how-it-works" className="py-8 md:py-12 lg:py-24">
+          {/* <section id="how-it-works" className="py-8 md:py-12 lg:py-24">
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
               <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
                 <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
@@ -175,7 +166,7 @@ export default function LandingPage() {
 
             <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2">
               <div className="relative overflow-hidden rounded-xl border border-primary/10 p-1">
-                <div className="absolute inset-0 -z-10 bg-[conic-gradient(from_180deg_at_50%_50%,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-primary/10"></div>
+                <div className="absolute inset-0 -z-10 bg-[conic-gradient(from_180deg_at_50%_50%,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-primary/10" />
                 <Image
                   src="/placeholder.svg?height=400&width=500"
                   width={500}
@@ -207,7 +198,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="relative overflow-hidden rounded-xl border border-primary/10 p-1 lg:order-first">
-                <div className="absolute inset-0 -z-10 bg-[conic-gradient(from_180deg_at_50%_50%,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-primary/10"></div>
+                <div className="absolute inset-0 -z-10 bg-[conic-gradient(from_180deg_at_50%_50%,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-primary/10" />
                 <Image
                   src="/placeholder.svg?height=400&width=500"
                   width={500}
@@ -220,7 +211,7 @@ export default function LandingPage() {
 
             <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2">
               <div className="relative overflow-hidden rounded-xl border border-primary/10 p-1">
-                <div className="absolute inset-0 -z-10 bg-[conic-gradient(from_180deg_at_50%_50%,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-primary/10"></div>
+                <div className="absolute inset-0 -z-10 bg-[conic-gradient(from_180deg_at_50%_50%,_var(--tw-gradient-stops))] from-primary/10 via-primary/5 to-primary/10" />
                 <Image
                   src="/placeholder.svg?height=400&width=500"
                   width={500}
@@ -239,29 +230,29 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-          </section>
+          </section> */}
 
           {/* CTA Section */}
           <section className="relative py-8 md:py-12 lg:py-24">
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
               <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
                 <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-                  Ready to Get Started?
+                  ¿Empezamos ya?
                 </span>
               </h2>
               <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                Join thousands of developers who are building better databases faster with schema.ai
+                Sé uno de los desarrolladores que están construyendo mejores bases de datos más rápido con schema.ai
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
-                <Link href="/signup">
+                <Link href="/sign-in">
                   <Button size="lg" className="bg-gradient-to-r from-primary to-purple-500 px-8">
-                    Sign Up Free <ArrowRight className="ml-2 h-4 w-4" />
+                    Regístrate gratis <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="/demo">
+                <Link href="/schema">
                   <Button variant="outline" size="lg" className="border-primary/20 px-8 backdrop-blur-sm">
-                    Try Demo
+                    Empezar
                   </Button>
                 </Link>
               </div>

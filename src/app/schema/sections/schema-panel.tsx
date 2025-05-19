@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ChevronUp } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TabTextSelector from "@/components/chat/tab-text-selector";
 
-export default function TextPanel({ hidePanel }: {  hidePanel: () => void }) {
+export default function SchemaPanel({ hidePanel }: {  hidePanel: () => void }) {
   const [activeTab, setActiveTab] = useState(0);
   const scripts = [{ type: "SQL", text: "hola mundo from sql" }, { type: "MongoDB", text: "hola mundo from mongo db" }];
   return (
@@ -16,7 +16,7 @@ export default function TextPanel({ hidePanel }: {  hidePanel: () => void }) {
           onClick={hidePanel}
           aria-label="Ocultar Espacio 3"
         >
-          <ChevronUp className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </Button>
       </div>
       <div className="flex flex-col p-4">
