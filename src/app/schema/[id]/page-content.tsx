@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from 'next/navigation';
 
-import { ChevronDown } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 import Chat from "../sections/chat-panel";
 import DiagramPanel from "../sections/diagram-panel";
-import TextPanel from "../sections/text-panel";
+import SchemaPanel from "../sections/schema-panel";
 import { useChatStore } from "@/stores/chat";
 
 export default function PageContent() {
@@ -72,7 +72,7 @@ export default function PageContent() {
                 <>
                   <ResizableHandle withHandle />
                   <ResizablePanel defaultSize={30} minSize={20}>
-                    <TextPanel hidePanel={() => togglePanel("schema")} />
+                    <SchemaPanel hidePanel={() => togglePanel("schema")} />
                   </ResizablePanel>
                 </>
               )}
@@ -83,9 +83,10 @@ export default function PageContent() {
                     variant="ghost"
                     size="sm"
                     onClick={() => togglePanel("schema")}
-                    className="w-full"
+                    aria-label="Mostrar Espacio 1"
+                    className="w-full bg-neutral-100 dark:bg-neutral-900"
                   >
-                    <ChevronDown className="h-4 w-4 mr-2" />
+                    <ChevronUp className="h-4 w-4 mr-2" />
                     Schemas
                   </Button>
                 </div>

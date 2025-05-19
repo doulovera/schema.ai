@@ -1,7 +1,7 @@
 import { ConversationView } from "@/components/chat/conversation-view";
 import { ChatInput } from "@/components/chat/chat-input";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronUp } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export default function Chat({ hidePanel }: { hidePanel: () => void }) {
   return (

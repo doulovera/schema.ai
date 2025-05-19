@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Diagram } from "@/components/reactflow/diagram";
 import {
   SignedIn,
-  SignedOut,
   UserButton,
 } from '@clerk/nextjs'
 import { useState, useEffect } from "react";
@@ -37,7 +36,7 @@ export default function DiagramPanel({
               size="sm"
               onClick={() => toggleChatPanel(true)}
               aria-label="Mostrar Espacio 1"
-              className="bg-neutral-100 dark:bg-neutral-900"
+              className="bg-card text-foreground"
             >
               <ChevronRight className="h-4 w-4 mr-2" />
               Mostrar Chat
