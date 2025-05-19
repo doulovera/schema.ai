@@ -19,6 +19,7 @@ export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
     { type: "mongodb", title: "MongoDB", text: chatSchemas.mongo || "" }, // Para Prism, el 'type' debe coincidir con el lenguaje registrado
   ];
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
     Prism.highlightAll();
   }, [activeTab, scripts, isLoading]);

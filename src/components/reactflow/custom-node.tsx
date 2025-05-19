@@ -1,4 +1,14 @@
-export default function CustomNode({ data }) {
+type Props = {
+  data: {
+    label: string;
+    columns: Array<{
+      name: string;
+      type: string;
+    }>;
+  };
+}
+
+export default function CustomNode({ data }: Props) {
   return (
     <div className="bg-white dark:bg-card shadow-xl rounded-lg w-64 border border-gray-200 dark:border-border">
       <div className="bg-sky-500 dark:bg-primary text-white dark:text-primary-foreground p-3 rounded-t-lg">
@@ -11,6 +21,7 @@ export default function CustomNode({ data }) {
         <ul className="space-y-1 text-xs">
           {data.columns.map((column, index) => (
             <li
+              // biome-ignore lint/suspicious/noArrayIndexKey: intended
               key={index}
               className="flex justify-between items-center p-1.5 bg-gray-50 dark:bg-muted hover:bg-gray-100 dark:hover:bg-muted-foreground/10 rounded"
             >
