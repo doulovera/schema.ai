@@ -5,18 +5,19 @@ import TabTextSelector from "@/components/chat/tab-text-selector";
 import { useChatStore } from "@/stores/chat";
 import Prism from "prismjs";
 import "prismjs/components/prism-sql";
-import "prismjs/components/prism-shell";
-import "prismjs/themes/prism-okaidia.css";
+import "prismjs/components/prism-mongodb"; // Asegúrate que este es el que quieres para MongoDB
+import "prismjs/themes/prism-okaidia.css"; // Puedes elegir el tema que prefieras
+import "prismjs/plugins/toolbar/prism-toolbar.js";
+import "prismjs/plugins/toolbar/prism-toolbar.css";
+import "prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard.js";
 
 export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
   const { isLoading, chatSchemas } = useChatStore();
   const [activeTab, setActiveTab] = useState(0);
   const scripts = [
-    { type: "SQL", text: chatSchemas.sql || "" },
-    { type: "MongoDB", text: chatSchemas.mongo || "" },
+    { type: "sql", title: "SQL", text: chatSchemas.sql || "" },
+    { type: "mongodb", title: "MongoDB", text: chatSchemas.mongo || "" }, // Para Prism, el 'type' debe coincidir con el lenguaje registrado
   ];
-
-  console.log(scripts);
 
   useEffect(() => {
     Prism.highlightAll();
@@ -24,17 +25,6 @@ export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
 
   return (
     <div className="flex flex-col h-full border-t border-border bg-card text-foreground">
-      <div className="p-4 border-b border-border flex justify-between items-center">
-        <h2 className="text-lg font-medium">Schemas</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={hidePanel}
-          aria-label="Ocultar Espacio 3"
-        >
-          <ChevronDown className="h-4 w-4" />
-        </Button>
-      </div>
       <div className="flex flex-col p-4">
         <div className="flex w-full">
           {scripts?.map(
@@ -49,8 +39,8 @@ export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
             )
           )}
         </div>
-        <div className="w-full h-40 p-2 border border-border rounded-b-md rounded-t-none bg-muted text-foreground resize-none -mt-1 overflow-auto">
-          <pre className="whitespace-pre-wrap h-full">
+        <div className="w-full h-40 p-2 border border-border rounded-b-md rounded-t-none bg-muted text-foreground -mt-1 overflow-auto">
+          <pre className="whitespace-pre-wrap toolbar w-full">
             <code
               className={`language-${scripts[activeTab]?.type.toLowerCase()}`}
             >

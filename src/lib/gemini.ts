@@ -34,8 +34,6 @@ const filePathSqlPromptFile = path.join(
 );
 const sqlPromptFromFile = fs.readFileSync(filePathSqlPromptFile, "utf8");
 
-// initializeChat is removed as passing Chat object to client is problematic.
-
 export async function sendUserMessage(
   currentHistory: GeminiMessage[],
   userMessage: string
