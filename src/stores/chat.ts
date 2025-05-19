@@ -2,7 +2,7 @@ import type { ConversationHistory } from '@/types/chat'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-import { generateJsonFromDescription } from "@/lib/gemini";
+import { generateJsonFromDescription, compareJsonSchemas } from "@/lib/gemini";
 import { createThread, updateThread, getThread } from '@/lib/thread';
 
 /**
@@ -47,49 +47,78 @@ export const useChatStore = create<ChatStore>()(
         }
         set({ chatHistory: [...(chatHistory || []), newMessage] })
       },
+
       handleSendMessage: async (message: string, chatId: string) => {
-        const { addMessageToChat } = get(); // Get only necessary functions initially
+        const { addMessageToChat, chatDiagram: currentChatDiagram } = get(); 
         addMessageToChat(ROLES.user, message);
         set({ isLoading: true, chatId });
 
-        const response = await generateJsonFromDescription(message);
+        const initialResponse = await generateJsonFromDescription(message);
 
-        if (response) {
-          addMessageToChat(ROLES.assistant, '¡Diagrama generado exitosamente!');
-          const newDiagram = JSON.stringify(response);
+        if (initialResponse && typeof initialResponse === 'object' && !('error' in initialResponse)) {
+          let newDiagramJson = JSON.stringify(initialResponse);
+          let summaryMessage: string | null = null;
+
+          if (currentChatDiagram) {
+            try {
+              // Ensure currentChatDiagram and newDiagramJson are valid JSON strings before parsing/comparing
+              const { summary, newSchema } = await compareJsonSchemas(currentChatDiagram, newDiagramJson);
+              if (summary && summary !== "No summary text from Gemini") {
+                summaryMessage = summary;
+              }
+              if (newSchema && typeof newSchema === 'object' && !('error' in newSchema)) {
+                newDiagramJson = JSON.stringify(newSchema);
+              } else if (newSchema && typeof newSchema === 'object' && 'error' in newSchema) {
+                console.error("Error in new schema generation:", (newSchema as { error: string }).error);
+                addMessageToChat(ROLES.assistant, `Error al actualizar el diagrama: ${(newSchema as { error: string }).error}`);
+              }
+            } catch (error) {
+              console.error('Error comparing JSON schemas:', error);
+              addMessageToChat(ROLES.assistant, 'Error al comparar los esquemas del diagrama.');
+            }
+          }
+
+          if (summaryMessage) {
+            addMessageToChat(ROLES.assistant, summaryMessage);
+          } else {
+            addMessageToChat(ROLES.assistant, '¡Diagrama generado/actualizado exitosamente!');
+          }
 
           set({
-            chatDiagram: newDiagram,
-            isLoading: false, // Set isLoading to false here after UI-related updates
+            chatDiagram: newDiagramJson,
+            isLoading: false,
           });
 
           try {
-            // Get the latest chatHistory from the store *after* all messages for this turn are added
             const latestChatHistory = get().chatHistory || [];
             const existingThread = await getThread(chatId);
 
             if (existingThread) {
               await updateThread(chatId, {
-                conversation: latestChatHistory, // Use latest chat history
-                diagram: newDiagram,
+                conversation: latestChatHistory,
+                diagram: newDiagramJson,
               });
             } else {
               await createThread({
                 chat_id: chatId,
-                diagram: newDiagram,
+                diagram: newDiagramJson,
                 schemas: {
                   sql: '', 
                   mongodb: '' 
                 },
-                conversation: latestChatHistory, // Use latest chat history
+                conversation: latestChatHistory,
               });
             }
           } catch (error) {
             console.error('Error handling thread:', error);
-            // Optionally set an error state in the store
+            addMessageToChat(ROLES.assistant, 'Error al guardar el hilo de conversación.');
           }
         } else {
-          // If diagram generation fails or returns no response
+          let errorMessage = 'Hubo un error generando el diagrama.';
+          if (initialResponse && typeof initialResponse === 'object' && 'error' in initialResponse) {
+            errorMessage = `Error generando el diagrama: ${(initialResponse as {error: string}).error}`;
+          }
+          addMessageToChat(ROLES.assistant, errorMessage);
           set({ isLoading: false });
         }
       },

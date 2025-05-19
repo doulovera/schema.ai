@@ -51,6 +51,15 @@ Ejemplo de estructura deseada:
   }
 }
 
-Cuando estés listo, genera una base de datos relacional que cumpla los requisitos anteriormente mencionados teniendo como base estricta la siguiente descripcion.
+Cuando estés listo, genera o actualiza una base de datos relacional que cumpla los requisitos anteriormente mencionados.
 
-Descripcion:
+Si se proporciona un "Esquema JSON Anterior", integra la "Descripción de Cambios" en ese esquema. Preserva todas las tablas y columnas existentes con sus propiedades, a menos que la descripción indique explícitamente una modificación o eliminación. El objetivo es refinar o expandir el esquema anterior, no reemplazarlo por completo a menos que se solicite.
+
+Si NO se proporciona un "Esquema JSON Anterior", genera una nueva base de datos relacional basada únicamente en la "Descripción".
+
+Esquema JSON Anterior (opcional):
+```json
+${previousSchemaIfExists}
+```
+
+Descripción (o Descripción de Cambios si hay un Esquema Anterior):
