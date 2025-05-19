@@ -17,7 +17,7 @@ export default function TabTextSelector({setActiveTab, activeTab, tab, tabIndex}
       }}
       type="button"
     >
-      {tab.type}
+      {tab.title}
     </button>
   );
 }

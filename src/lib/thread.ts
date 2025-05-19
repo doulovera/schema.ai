@@ -10,10 +10,10 @@ export async function createThread(data: Partial<IThread>) {
     diagram: data.diagram,
     schemas: {
       sql: data.schemas?.sql,
-      mongodb: data.schemas?.mongodb,
+      mongo: data.schemas?.mongo,
     },
     conversation: data.conversation,
-  })
+  });
   return JSON.parse(JSON.stringify(newThread))
 }
 

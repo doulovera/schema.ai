@@ -5,6 +5,7 @@ import {
   sendUserMessage,
   normalizeChat,
   compareJsonSchemas,
+  generateDatabaseScriptFromDiagram,
 } from '@/lib/gemini'
 import { updateThread, getThread, createThread } from '@/lib/thread'
 
@@ -18,7 +19,7 @@ interface ChatStore {
   chatHistory: Message[] | null
   chatId: string | null
   chatDiagram: string | null
-  chatSchemas: string | null
+  chatSchemas: { sql: string; mongo: string }
   isLoading: boolean
 
   addMessageToChat: (role: Roles, text: string, diagram?: string) => void
@@ -33,7 +34,7 @@ export const useChatStore = create<ChatStore>()(
       chatHistory: null,
       chatId: null,
       chatDiagram: null,
-      chatSchemas: null,
+      chatSchemas: { sql: '', mongo: '' },
       isLoading: false,
 
       addMessageToChat: (role: Roles, text: string, diagram?: string) => {
@@ -53,6 +54,7 @@ export const useChatStore = create<ChatStore>()(
           addMessageToChat,
           chatHistory: currentLocalHistory,
           chatDiagram: currentDiagramInStore,
+          chatSchemas,
         } = get()
 
         addMessageToChat(ROLES.user, messageText)
@@ -87,6 +89,18 @@ export const useChatStore = create<ChatStore>()(
             aiDiagramResponse,
           )
 
+          const [sqlSchema, mongodbSchema] = await Promise.all([
+            generateDatabaseScriptFromDiagram(aiDiagramResponse, 'sql'),
+            generateDatabaseScriptFromDiagram(aiDiagramResponse, 'mongo'),
+          ])
+
+          set({
+            chatSchemas: {
+              sql: sqlSchema || '',
+              mongo: mongodbSchema || '',
+            },
+          })
+
           set({ chatDiagram: aiDiagramResponse })
 
           const thread = await getThread(chatId)
@@ -95,20 +109,14 @@ export const useChatStore = create<ChatStore>()(
             await updateThread(chatId, {
               diagram: aiDiagramResponse,
               conversation: updatedConversationHistory,
-              schemas: {
-                sql: thread.schemas.sql || '',
-                mongodb: thread.schemas.mongodb || '',
-              },
+              schemas: chatSchemas,
             })
           } else {
             const newThread = await createThread({
               chat_id: chatId,
               diagram: aiDiagramResponse,
               conversation: get().chatHistory || [],
-              schemas: {
-                sql: '',
-                mongodb: '',
-              },
+              schemas: chatSchemas,
             })
             set({ chatId: newThread.chat_id })
           }
@@ -132,7 +140,7 @@ export const useChatStore = create<ChatStore>()(
               chatId: thread.chat_id,
               chatHistory: thread.conversation,
               chatDiagram: thread.diagram, // Load the latest overall diagram for the thread
-              chatSchemas: JSON.stringify(thread.schemas), // For display of SQL/MongoDB schemas
+              chatSchemas: thread.schemas, // For display of SQL/MongoDB schemas
               isLoading: false,
             })
           } else {
@@ -140,7 +148,7 @@ export const useChatStore = create<ChatStore>()(
               chatId,
               chatHistory: [],
               chatDiagram: null,
-              chatSchemas: null,
+              chatSchemas: { mongo: '', sql: '' },
               isLoading: false,
             })
           }
@@ -150,7 +158,7 @@ export const useChatStore = create<ChatStore>()(
             chatId,
             chatHistory: [],
             chatDiagram: null,
-            chatSchemas: null,
+            chatSchemas: { mongo: '', sql: '' },
             isLoading: false,
           })
         }
