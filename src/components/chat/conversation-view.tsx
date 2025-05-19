@@ -10,7 +10,7 @@ export function ConversationView() {
   return (
     <div className="space-y-4">
       {chatHistory?.map((message) => (
-        <Card key={message.id} className={`p-3 ${message.role === "assistant" ? "bg-muted" : ""}`}>
+        <Card key={message.id} className={`p-3 ${message.role === "model" ? "bg-muted" : ""}`}>
           <div className="flex justify-between items-start mb-1">
             <Badge variant={message.role === "user" ? "default" : "secondary"}>
               {message.role === "user" ? "You" : "AI"}
@@ -25,7 +25,7 @@ export function ConversationView() {
               })}
             </span>
           </div>
-          <p className="text-sm">{message.content}</p>
+          <p className="text-sm">{message.message}</p>
         </Card>
       ))}
     </div>
