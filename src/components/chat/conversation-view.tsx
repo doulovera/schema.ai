@@ -13,7 +13,7 @@ export function ConversationView() {
         <Card key={message.id} className={`p-3 ${message.role === "model" ? "bg-muted" : ""}`}>
           <div className="flex justify-between items-start mb-1">
             <Badge variant={message.role === "user" ? "default" : "secondary"}>
-              {message.role === "user" ? "You" : "AI"}
+              {message.role === "user" ? "Tú" : "AI"}
             </Badge>
             <span className="text-xs text-muted-foreground">
               {new Date(message.timestamp).toLocaleString("es-ES", {
