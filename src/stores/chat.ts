@@ -13,6 +13,18 @@ const ROLES: Record<string, Roles> = {
   assistant: 'model',
 }
 
+interface ErrorWithNumericCode extends Error {
+  code: number
+}
+
+function isErrorWithNumericCode(e: unknown): e is ErrorWithNumericCode {
+  return (
+    e instanceof Error &&
+    'code' in e &&
+    typeof (e as { code: unknown }).code === 'number'
+  )
+}
+
 interface ChatStore {
   conversations: string[]
   chatHistory: Message[] | null
@@ -112,12 +124,24 @@ export const useChatStore = create<ChatStore>()(
             })
             set({ chatId: newThread.chat_id })
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Error sending message:', error)
-          addMessageToChat(
-            ROLES.assistant,
-            `Sorry, I encountered an error: ${(error as Error).message}`,
-          )
+          if (isErrorWithNumericCode(error) && error.code === 503) {
+            addMessageToChat(
+              ROLES.assistant,
+              'Los servidores fallan. Parece que están echando una siesta... ¡pero nosotros no! Prueba de nuevo, a ver si se despiertan.',
+            )
+          } else if (error instanceof Error) {
+            addMessageToChat(
+              ROLES.assistant,
+              `Lo siento, encontré un error: ${error.message}`,
+            )
+          } else {
+            addMessageToChat(
+              ROLES.assistant,
+              'Lo siento, ocurrió un error desconocido al enviar el mensaje.',
+            )
+          }
         } finally {
           set({ isLoading: false })
         }
