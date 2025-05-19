@@ -150,7 +150,9 @@ export function Diagram() {
       fitView // Added fitView prop for initial fit
     >
       <Background />
-      <Controls />
+      <div className="text-black">
+        <Controls />
+      </div>
     </ReactFlow>
   );
 }
