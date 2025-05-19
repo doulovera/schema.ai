@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { chatTest } from "@/lib/gemini";
 import { useChatStore } from "@/stores/chat";
 import { useParams } from "next/navigation";
 
@@ -13,15 +12,14 @@ export function ChatInput() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    /* const form = e.currentTarget;
+    const form = e.currentTarget;
     const inputElement = form.elements[0] as HTMLInputElement;
     const message = inputElement.value;
 
     if (!message.trim() || !chatId) return;
 
+    form.reset();
     await handleSendMessage(message, chatId);
-    form.reset(); // Clear the input field */
-    await chatTest();
   };
 
   return (
