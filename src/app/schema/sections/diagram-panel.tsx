@@ -5,9 +5,10 @@ import {
   SignedIn,
   UserButton,
 } from '@clerk/nextjs'
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useChatStore } from "@/stores/chat";
+import { useConfigStore } from "@/stores/config";
 
 export default function DiagramPanel({
   chatPanelIsShown,
@@ -16,17 +17,19 @@ export default function DiagramPanel({
   chatPanelIsShown: boolean;
   toggleChatPanel: (show: boolean) => void;
 }) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, setDarkMode } = useConfigStore();
   const { isLoading } = useChatStore();
 
   useEffect(() => {
-    // Check initial theme from body class
-    setIsDarkMode(document.body.classList.contains('dark'));
-  }, []);
+    if (isDarkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const toggleTheme = () => {
-    document.body.classList.toggle("dark");
-    setIsDarkMode(!isDarkMode);
+    setDarkMode(!isDarkMode);
   };
 
   return (
