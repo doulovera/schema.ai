@@ -34,19 +34,19 @@ export const useChatStore = create<ChatStore>()(
       chatHistory: null,
       chatId: null,
       chatDiagram: null,
-      chatSchemas: { sql: '', mongo: '' },
+      chatSchemas: { sql: "", mongo: "" },
       isLoading: false,
 
       addMessageToChat: (role: Roles, text: string, diagram?: string) => {
-        const { chatHistory } = get()
+        const { chatHistory } = get();
         const newMessage: Message = {
           id: Date.now().toString(),
           role,
           message: text, // Textual content (e.g., user query, AI summary)
-          diagram: diagram || '', // Diagram JSON string, if this message includes/is a diagram
+          diagram: diagram || "", // Diagram JSON string, if this message includes/is a diagram
           timestamp: Date.now(),
-        }
-        set({ chatHistory: [...(chatHistory || []), newMessage] })
+        };
+        set({ chatHistory: [...(chatHistory || []), newMessage] });
       },
 
       handleSendMessage: async (messageText: string, chatId: string) => {
@@ -54,21 +54,52 @@ export const useChatStore = create<ChatStore>()(
           addMessageToChat,
           chatHistory: currentLocalHistory,
           chatDiagram: currentDiagramInStore,
-          chatSchemas,
-        } = get()
+        } = get();
 
-        addMessageToChat(ROLES.user, messageText)
-        set({ isLoading: true, chatId })
+        addMessageToChat(ROLES.user, messageText);
+        set({ isLoading: true, chatId });
 
-        const normalizedHistory = await normalizeChat(currentLocalHistory || [])
+        const normalizedHistory = await normalizeChat(
+          currentLocalHistory || []
+        );
 
         try {
-          const { responseText: aiDiagramResponse } = await sendUserMessage(
-            normalizedHistory,
-            messageText,
-          )
+          const { responseText, updatedHistory: geminiHistory } =
+            await sendUserMessage(normalizedHistory, messageText);
+          console.log(responseText)
+          let isDiagramPayload = true;
+          try {
+            JSON.parse(responseText); // Intenta parsear, si falla, no es un diagrama JSON
+          } catch (e) {
+            isDiagramPayload = false; // Es un mensaje de texto (error de validación o similar)
+          }
 
-          let summaryForChatMessage = 'Received new diagram.'
+          if (!isDiagramPayload) {
+            // responseText es un mensaje de validación/error
+            addMessageToChat(ROLES.assistant, responseText); // Muestra el mensaje en el chat
+
+            // Actualiza el hilo en la base de datos con la conversación que incluye el mensaje
+            const currentChatHistoryForDB = get().chatHistory || [];
+            const threadExists = await getThread(chatId);
+            if (threadExists) {
+              await updateThread(chatId, {
+                conversation: currentChatHistoryForDB,
+                // No se actualiza el diagrama ni los esquemas si la entrada no fue válida
+              });
+            } else {
+              await createThread({
+                chat_id: chatId,
+                conversation: currentChatHistoryForDB,
+              });
+            }
+            set({ isLoading: false });
+            return; // Termina el procesamiento aquí
+          }
+
+          // responseText es un diagrama (isDiagramPayload es true)
+          const aiDiagramResponse = responseText; // Renombrar para claridad con el código existente
+
+          let summaryForChatMessage = "Received new diagram.";
           if (
             currentDiagramInStore &&
             aiDiagramResponse &&
@@ -76,65 +107,68 @@ export const useChatStore = create<ChatStore>()(
           ) {
             const comparisonResult = await compareJsonSchemas(
               currentDiagramInStore,
-              aiDiagramResponse,
-            )
-            summaryForChatMessage = comparisonResult.summary
+              aiDiagramResponse
+            );
+            summaryForChatMessage = comparisonResult.summary;
           } else if (aiDiagramResponse && !currentDiagramInStore) {
-            summaryForChatMessage = 'Initial diagram generated.'
+            summaryForChatMessage = "Initial diagram generated.";
           }
 
+          // Añade el mensaje de resumen al chat, con el diagrama como payload
           addMessageToChat(
             ROLES.assistant,
             summaryForChatMessage,
-            aiDiagramResponse,
-          )
+            aiDiagramResponse // El string JSON del diagrama
+          );
 
           const [sqlSchema, mongodbSchema] = await Promise.all([
-            generateDatabaseScriptFromDiagram(aiDiagramResponse, 'sql'),
-            generateDatabaseScriptFromDiagram(aiDiagramResponse, 'mongo'),
-          ])
+            generateDatabaseScriptFromDiagram(aiDiagramResponse, "sql"),
+            generateDatabaseScriptFromDiagram(aiDiagramResponse, "mongo"),
+          ]);
 
+          const newChatSchemas = {
+            sql: sqlSchema || "",
+            mongo: mongodbSchema || "",
+          };
           set({
-            chatSchemas: {
-              sql: sqlSchema || '',
-              mongo: mongodbSchema || '',
-            },
-          })
+            chatSchemas: newChatSchemas,
+          });
 
-          set({ chatDiagram: aiDiagramResponse })
+          set({ chatDiagram: aiDiagramResponse }); // Almacena el nuevo diagrama (string JSON)
 
-          const thread = await getThread(chatId)
-          if (thread) {
-            const updatedConversationHistory = get().chatHistory || []
+          // Actualiza el hilo en la base de datos
+          const finalChatHistoryForDB = get().chatHistory || [];
+          const threadExists = await getThread(chatId);
+          if (threadExists) {
             await updateThread(chatId, {
               diagram: aiDiagramResponse,
-              conversation: updatedConversationHistory,
-              schemas: chatSchemas,
-            })
+              conversation: finalChatHistoryForDB,
+              schemas: newChatSchemas,
+            });
           } else {
             const newThread = await createThread({
               chat_id: chatId,
               diagram: aiDiagramResponse,
-              conversation: get().chatHistory || [],
-              schemas: chatSchemas,
-            })
-            set({ chatId: newThread.chat_id })
+              conversation: finalChatHistoryForDB,
+              schemas: newChatSchemas,
+            });
+            // set({ chatId: newThread.chat_id }); // chatId ya está seteado
           }
         } catch (error) {
-          console.error('Error sending message:', error)
+          console.error("Error sending message:", error);
           addMessageToChat(
             ROLES.assistant,
-            `Sorry, I encountered an error: ${(error as Error).message}`,
-          )
+            `Sorry, I encountered an error: ${(error as Error).message}`
+          );
         } finally {
-          set({ isLoading: false })
+          set({ isLoading: false });
         }
       },
 
       loadChatThread: async (chatId: string) => {
-        set({ isLoading: true })
+        set({ isLoading: true });
         try {
-          const thread = await getThread(chatId)
+          const thread = await getThread(chatId);
           if (thread) {
             set({
               chatId: thread.chat_id,
@@ -142,31 +176,31 @@ export const useChatStore = create<ChatStore>()(
               chatDiagram: thread.diagram, // Load the latest overall diagram for the thread
               chatSchemas: thread.schemas, // For display of SQL/MongoDB schemas
               isLoading: false,
-            })
+            });
           } else {
             set({
               chatId,
               chatHistory: [],
               chatDiagram: null,
-              chatSchemas: { mongo: '', sql: '' },
+              chatSchemas: { mongo: "", sql: "" },
               isLoading: false,
-            })
+            });
           }
         } catch (error) {
-          console.error('Error loading chat thread:', error)
+          console.error("Error loading chat thread:", error);
           set({
             chatId,
             chatHistory: [],
             chatDiagram: null,
-            chatSchemas: { mongo: '', sql: '' },
+            chatSchemas: { mongo: "", sql: "" },
             isLoading: false,
-          })
+          });
         }
       },
     }),
     {
-      name: 'chat-storage',
+      name: "chat-storage",
       storage: createJSONStorage(() => sessionStorage),
-    },
-  ),
-)
+    }
+  )
+);

@@ -34,10 +34,74 @@ const filePathSqlPromptFile = path.join(
 );
 const sqlPromptFromFile = fs.readFileSync(filePathSqlPromptFile, "utf8");
 
+const filePathValidateIntentPromptFile = path.join(
+  process.cwd(),
+  "src/prompts",
+  "validate-user-intent.txt"
+);
+const validateIntentPromptFromFile = fs.readFileSync(
+  filePathValidateIntentPromptFile,
+  "utf8"
+);
+
+interface ValidationResult {
+  isValid: boolean;
+  message: string;
+}
+
+export async function validateUserIntent(
+  userMessage: string
+): Promise<ValidationResult> {
+  const response = await ai.models.generateContent({
+    model: MISC_MODEL, // Using a smaller model for validation
+    contents: userMessage,
+    config: {
+      systemInstruction: {
+        role: "user",
+        parts: [{ text: validateIntentPromptFromFile }],
+      },
+      responseMimeType: "application/json",
+    },
+  });
+
+  const text = response?.text;
+  if (text) {
+    try {
+      const validationResult = JSON.parse(text) as ValidationResult;
+      return validationResult;
+    } catch (error) {
+      console.error("Error parsing validation response:", error);
+      return {
+        isValid: false,
+        message: "Error al procesar la validación de la solicitud.",
+      }; // Default to not valid if parsing fails
+    }
+  }
+  return {
+    isValid: false,
+    message: "No se recibió respuesta del servicio de validación.",
+  }; // Default to not valid if no text response
+}
+
 export async function sendUserMessage(
   currentHistory: GeminiMessage[],
   userMessage: string
 ): Promise<{ responseText: string; updatedHistory: GeminiMessage[] }> {
+  const validateObj = await validateUserIntent(userMessage);
+  if (!validateObj.isValid) {
+    return {
+      responseText: validateObj.message,
+      updatedHistory: [
+        ...currentHistory,
+        { role: "user", parts: [{ text: userMessage }] },
+        {
+          role: "model",
+          parts: [{ text: validateObj.message }],
+        },
+      ],
+    };
+  }
+
   const chat = ai.chats.create({
     model: MAIN_MODEL,
     history: currentHistory,
@@ -117,7 +181,7 @@ export async function generateDatabaseScriptFromDiagram(
   };
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: SCHEMA_MODEL,
     contents: `${diagram}`,
     config: {
       responseSchema: response_schema,
