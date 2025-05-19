@@ -51,9 +51,7 @@ export default function PageContent() {
           {panels.chat && (
             <>
               <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-                <Chat
-                  hidePanel={() => togglePanel("chat")}
-                />
+                <Chat hidePanel={() => togglePanel("chat")} />
               </ResizablePanel>
               <ResizableHandle withHandle />
             </>
@@ -64,7 +62,9 @@ export default function PageContent() {
               <ResizablePanel defaultSize={70} minSize={30}>
                 <DiagramPanel
                   chatPanelIsShown={panels.chat}
-                  toggleChatPanel={(show) => setPanels((prev) => ({ ...prev, chat: show }))}
+                  toggleChatPanel={(show) =>
+                    setPanels((prev) => ({ ...prev, chat: show }))
+                  }
                 />
               </ResizablePanel>
 
@@ -72,9 +72,7 @@ export default function PageContent() {
                 <>
                   <ResizableHandle withHandle />
                   <ResizablePanel defaultSize={30} minSize={20}>
-                    <TextPanel
-                      hidePanel={() => togglePanel("schema")}
-                    />
+                    <TextPanel hidePanel={() => togglePanel("schema")} />
                   </ResizablePanel>
                 </>
               )}
