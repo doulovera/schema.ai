@@ -1,4 +1,4 @@
-import type { ConversationHistory } from '@/types/chat'
+import type { ConversationHistory, Roles } from '@/types/chat'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
@@ -14,9 +14,9 @@ import type { Chat } from "@google/genai";
  * "chat" is the item of the conversations
  */
 
-const ROLES = {
+const ROLES: Record<string, Roles> = {
   user: "user",
-  assistant: "assistant",
+  assistant: "model",
 };
 
 interface ChatStore {
@@ -29,7 +29,7 @@ interface ChatStore {
   isLoading: boolean;
 
   addMessageToChat: (
-    role: (typeof ROLES)[keyof typeof ROLES],
+    role: Roles,
     message: string
   ) => void;
   handleSendMessage: (message: string, chatId: string) => Promise<void>;
@@ -48,7 +48,7 @@ export const useChatStore = create<ChatStore>()(
       isLoading: false,
 
       addMessageToChat: (
-        role: (typeof ROLES)[keyof typeof ROLES],
+        role: Roles,
         message: string
       ) => {
         const { chatHistory } = get();

@@ -1,10 +1,12 @@
+export type Roles = "user" | "model";
+
 export interface MessageRole {
   user: "user";
   assistant: "model";
 }
 
 export interface GeminiMessage {
-  role: "user" | "model";
+  role: Roles;
   parts: {
     text: string;
   }[];
@@ -12,8 +14,8 @@ export interface GeminiMessage {
 
 export interface Message {
   id: string;
-  timestamp: Date;
-  role: "user" | "model";
+  timestamp: number;
+  role: Roles;
   content: string;
 }
 
@@ -32,9 +34,4 @@ export interface Conversation {
   messages: Message[];
 }
 
-export interface ConversationHistory {
-  id: string;
-  role: string;
-  content: string;
-  timestamp: number;
-}
+export interface ConversationHistory extends Message {}
