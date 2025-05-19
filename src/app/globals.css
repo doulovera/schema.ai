@@ -120,7 +120,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-.toolbar {
-  opacity: 1 !important;
-}

@@ -40,7 +40,7 @@ export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
           )}
         </div>
         <div className="w-full h-40 p-2 border border-border rounded-b-md rounded-t-none bg-muted text-foreground -mt-1 overflow-auto">
-          <pre className="whitespace-pre-wrap toolbar w-full">
+          <pre className="whitespace-pre-wrap toolbar w-full !opacity-100">
             <code
               className={`language-${scripts[activeTab]?.type.toLowerCase()}`}
             >
