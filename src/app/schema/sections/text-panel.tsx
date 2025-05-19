@@ -8,47 +8,16 @@ import { useChatStore } from "@/stores/chat";
 import { generateDatabaseScriptFromDiagram } from "@/lib/gemini";
 
 export default function TextPanel({ hidePanel }: { hidePanel: () => void }) {
-  const { chatDiagram } = useChatStore();
+  const { chatSchemas, isLoading } = useChatStore();
+
+  console.log(chatSchemas);
 
   const [scripts, setScripts] = useState([
-    { type: "SQL", text: "" },
-    { type: "MongoDB", text: "" },
+    { type: "SQL", text: chatSchemas.sql || "" },
+    { type: "MongoDB", text: chatSchemas.mongo || "" },
   ]);
+
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const generateScripts = async () => {
-      setLoading(true);
-      try {
-        const [sqlScript, mongoScript] = await Promise.all([
-          generateDatabaseScriptFromDiagram(chatDiagram || "", "sql"),
-          generateDatabaseScriptFromDiagram(chatDiagram || "", "mongo"),
-        ]);
-        setScripts([
-          { type: "SQL", text: sqlScript },
-          { type: "MongoDB", text: mongoScript },
-        ]);
-      } catch (e) {
-        setScripts([
-          { type: "SQL", text: "Error generando script SQL" },
-          { type: "MongoDB", text: "Error generando script MongoDB" },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (chatDiagram) {
-      generateScripts();
-    } else {
-      setScripts([
-        { type: "SQL", text: "" },
-        { type: "MongoDB", text: "" },
-      ]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatDiagram]);
 
   return (
     <div className="flex flex-col h-full border-t border-border bg-card text-foreground">
@@ -79,7 +48,7 @@ export default function TextPanel({ hidePanel }: { hidePanel: () => void }) {
         </div>
         <textarea
           className="w-full h-40 p-2 border border-border rounded-b-md rounded-t-none bg-muted text-foreground resize-none -mt-1"
-          value={loading ? "Generando script..." : scripts[activeTab]?.text}
+          value={isLoading ? "Generando script..." : scripts[activeTab]?.text}
           readOnly
         />
       </div>
