@@ -2,10 +2,15 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TabTextSelector from "@/components/chat/tab-text-selector";
+import { useChatStore } from "@/stores/chat";
 
-export default function SchemaPanel({ hidePanel }: {  hidePanel: () => void }) {
+export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
+  const { chatSchemas } = useChatStore();
   const [activeTab, setActiveTab] = useState(0);
-  const scripts = [{ type: "SQL", text: "hola mundo from sql" }, { type: "MongoDB", text: "hola mundo from mongo db" }];
+  const scripts = [
+    { type: "SQL", text: chatSchemas.sql || "" },
+    { type: "MongoDB", text: chatSchemas.mongo || "" },
+  ];
   return (
     <div className="flex flex-col h-full border-t border-border bg-card text-foreground">
       <div className="p-4 border-b border-border flex justify-between items-center">
