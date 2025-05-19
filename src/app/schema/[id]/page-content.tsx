@@ -22,15 +22,12 @@ export default function PageContent() {
     schema: true,
   });
 
-  const { loadChatThread, chatId: storeChatId, chatHistory } = useChatStore(); // Added chatHistory
+  const { loadChatThread, chatId: storeChatId } = useChatStore();
   const params = useParams();
   const urlChatId = params.id as string;
 
   useEffect(() => {
     if (urlChatId) {
-      // Only call loadChatThread if the urlChatId is different from the one in the store,
-      // or if the chatHistory for the current urlChatId hasn't been loaded yet.
-      // Access chatHistory via getState() to ensure the latest value is used inside useEffect
       if (urlChatId !== storeChatId || useChatStore.getState().chatHistory === null) {
         loadChatThread(urlChatId);
       }

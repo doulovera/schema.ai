@@ -7,6 +7,7 @@ import {
 } from '@clerk/nextjs'
 import { useState, useEffect } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
+import { useChatStore } from "@/stores/chat";
 
 export default function DiagramPanel({
   chatPanelIsShown,
@@ -16,6 +17,7 @@ export default function DiagramPanel({
   toggleChatPanel: (show: boolean) => void;
 }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isLoading } = useChatStore();
 
   useEffect(() => {
     // Check initial theme from body class
@@ -55,7 +57,12 @@ export default function DiagramPanel({
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
+      <div className="relative flex-1 overflow-auto p-4 flex items-center justify-center">
+        {
+          isLoading && (
+            <div className="absolute z-100 flex items-center justify-center h-full w-full bg-black opacity-50" />
+          )
+        }
         <ReactFlowProvider>
           <Diagram />
         </ReactFlowProvider>
