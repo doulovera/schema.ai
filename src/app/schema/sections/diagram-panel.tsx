@@ -6,6 +6,7 @@ import {
   UserButton,
 } from '@clerk/nextjs'
 import { useState, useEffect } from "react";
+import { ReactFlowProvider } from "@xyflow/react";
 
 export default function DiagramPanel({
   chatPanelIsShown,
@@ -55,7 +56,9 @@ export default function DiagramPanel({
         </div>
       </div>
       <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-        <Diagram />
+        <ReactFlowProvider>
+          <Diagram />
+        </ReactFlowProvider>
       </div>
     </div>
   );
