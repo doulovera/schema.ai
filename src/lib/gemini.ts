@@ -51,20 +51,8 @@ export async function generateJsonFromDescription(description: string, previousS
 }
 
 export async function compareJsonSchemas(oldJson: string, newJson: string): Promise<{ summary: string, newSchema?: object }> {
-  // 1. Compare the two schemas to get a summary of the differences
-  const responseSummary = await ai.models.generateContent({
-    model: MISC_MODEL,
-    contents: `Compare the following two JSON schemas and provide a summary of the differences:\n\nOld JSON:\n${oldJson}\n\nNew JSON:\n${newJson}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in the same language as the input JSON schemas.`,
-    config: {
-      responseMimeType: "text/plain",
-    }
-  });
-
-  const summary = responseSummary?.text || "No summary text from Gemini";
-
-  // 2. Generate a new complete schema by integrating newJson into oldJson
   const responseNewSchema = await ai.models.generateContent({
-    model: MAIN_MODEL, // Using MAIN_MODEL as it's typically used for JSON generation
+    model: MAIN_MODEL,
     contents: `Given the following old JSON schema and a new JSON schema (which might be a partial update or a new part for the old schema), integrate the new JSON schema into the old JSON schema to produce a single, complete, and updated JSON schema.
 Ensure all elements from the old schema are preserved unless directly modified or replaced by the new JSON schema.
 The output must be only the resulting JSON schema.
@@ -94,6 +82,16 @@ Resulting complete and updated JSON Schema:`,
   } else {
     newSchema = { error: "No new schema text from Gemini" };
   }
+
+  const responseSummary = await ai.models.generateContent({
+    model: MISC_MODEL,
+    contents: `Compare the following two JSON schemas and provide a summary of the differences:\n\nOld JSON:\n${oldJson}\n\nNew JSON:\n${newSchema}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in the same language as the input JSON schemas.`,
+    config: {
+      responseMimeType: "text/plain",
+    }
+  });
+
+  const summary = responseSummary?.text || "No summary text from Gemini";
 
   return { summary, newSchema };
 }
