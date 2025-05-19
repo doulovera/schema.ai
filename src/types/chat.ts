@@ -1,13 +1,20 @@
 export interface MessageRole {
-  user: 'user';
-  assistant: 'assistant';
+  user: "user";
+  assistant: "model";
+}
+
+export interface GeminiMessage {
+  role: "user" | "model";
+  parts: {
+    text: string;
+  }[];
 }
 
 export interface Message {
   id: string;
-  role: MessageRole;
-  content: string;
   timestamp: Date;
+  role: "user" | "model";
+  content: string;
 }
 
 export interface Schemas {

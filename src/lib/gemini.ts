@@ -1,6 +1,8 @@
 "use server";
 
+import { GeminiMessage, Message } from "@/types/chat";
 import { GoogleGenAI } from "@google/genai";
+import type { Chat } from "@google/genai";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -9,17 +11,60 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 const MAIN_MODEL = "gemini-2.5-flash-preview-04-17";
 const SCHEMA_MODEL = "";
-const MISC_MODEL = "gemini-2.0-flash"
+const MISC_MODEL = "gemini-2.0-flash";
 
-const filePath = path.join(process.cwd(), "src/prompts", "description-to-json-database.txt");
+const filePath = path.join(
+  process.cwd(),
+  "src/prompts",
+  "description-to-json-database.txt"
+);
 const prompt = fs.readFileSync(filePath, "utf8");
 
-export async function generateJsonFromDescription(description: string, previousSchema?: string | null): Promise<object> {
+export function initializeChat(history?: GeminiMessage[]) {
+  const chat = ai.chats.create({
+    model: MAIN_MODEL,
+    history: history || [],
+    config: {
+      responseMimeType: "application/json",
+      systemInstruction: {
+        role: "user",
+        parts: [{ text: prompt }],
+      },
+    },
+  });
+  return chat;
+}
+
+export async function sendUserMessage(
+  chat: Chat,
+  userMessage: string
+): Promise<string> {
+  const response = await chat.sendMessage({ message: userMessage });
+  return response.text || "";
+}
+
+export function normalizeChat(threadHistory: Message[]): GeminiMessage[] {
+  return threadHistory.map((thread) => ({
+    role: thread.role,
+    parts: [{ text: thread.content }],
+  }));
+}
+
+/* export async function generateJsonFromDescription(
+  description: string,
+  previousSchema?: string | null
+): Promise<object> {
   let fullPromptText = prompt;
   if (previousSchema) {
-    fullPromptText = fullPromptText.replace('${previousSchemaIfExists}', previousSchema);
+    fullPromptText = fullPromptText.replace(
+      "${previousSchemaIfExists}",
+      previousSchema
+    );
   } else {
-    fullPromptText = fullPromptText.replace('${previousSchemaIfExists}', 'null'); // Indicate no previous schema
+    fullPromptText = fullPromptText.replace(
+      "${previousSchemaIfExists}",
+      "null"
+    ); // Indicate no previous schema
   }
 
   // The prompt template is expected to end with something like "Descripción (o Descripción de Cambios si hay un Esquema Anterior):\n"
@@ -31,8 +76,8 @@ export async function generateJsonFromDescription(description: string, previousS
     contents: finalContents,
     config: {
       responseMimeType: "application/json",
-    }
-  });
+    },
+  }); 
 
   // TODO: handle "503 Service Unavailable" error - use retry logic with other model
 
@@ -44,13 +89,16 @@ export async function generateJsonFromDescription(description: string, previousS
       return json;
     } catch (error) {
       console.error("Error parsing JSON from Gemini response:", error);
-      return { error: "Failed to parse JSON response" }; 
+      return { error: "Failed to parse JSON response" };
     }
   }
   return { error: "No response text from Gemini" };
-}
+}*/
 
-export async function compareJsonSchemas(oldJson: string, newJson: string): Promise<{ summary: string, newSchema?: object }> {
+export async function compareJsonSchemas(
+  oldJson: string,
+  newJson: string
+): Promise<{ summary: string; newSchema?: object }> {
   const responseNewSchema = await ai.models.generateContent({
     model: MAIN_MODEL,
     contents: `Given the following old JSON schema and a new JSON schema (which might be a partial update or a new part for the old schema), integrate the new JSON schema into the old JSON schema to produce a single, complete, and updated JSON schema.
@@ -66,7 +114,7 @@ ${newJson}
 Resulting complete and updated JSON Schema:`,
     config: {
       responseMimeType: "application/json",
-    }
+    },
   });
 
   let newSchema: object;
@@ -76,7 +124,10 @@ Resulting complete and updated JSON Schema:`,
     try {
       newSchema = JSON.parse(newSchemaText);
     } catch (error) {
-      console.error("Error parsing new schema JSON from Gemini response:", error);
+      console.error(
+        "Error parsing new schema JSON from Gemini response:",
+        error
+      );
       newSchema = { error: "Failed to parse new schema JSON response" };
     }
   } else {
@@ -85,10 +136,12 @@ Resulting complete and updated JSON Schema:`,
 
   const responseSummary = await ai.models.generateContent({
     model: MISC_MODEL,
-    contents: `Compare the following two JSON schemas and provide a summary of the differences:\n\nOld JSON:\n${oldJson}\n\nNew JSON:\n${newSchema}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in the same language as the input JSON schemas.`,
+    contents: `Compare the following two JSON schemas and provide a summary of the differences:\n\nOld JSON:\n${oldJson}\n\nNew JSON:\n${JSON.stringify(
+      newSchema
+    )}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in the same language as the input JSON schemas.`,
     config: {
       responseMimeType: "text/plain",
-    }
+    },
   });
 
   const summary = responseSummary?.text || "No summary text from Gemini";

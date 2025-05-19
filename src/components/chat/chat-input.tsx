@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { chatTest } from "@/lib/gemini";
 import { useChatStore } from "@/stores/chat";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 
 export function ChatInput() {
   const { handleSendMessage } = useChatStore();
@@ -12,22 +13,20 @@ export function ChatInput() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
+    /* const form = e.currentTarget;
     const inputElement = form.elements[0] as HTMLInputElement;
     const message = inputElement.value;
 
     if (!message.trim() || !chatId) return;
 
     await handleSendMessage(message, chatId);
-    form.reset(); // Clear the input field
+    form.reset(); // Clear the input field */
+    await chatTest();
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input
-        placeholder="Write your specifications..."
-        className="flex-1"
-      />
+      <Input placeholder="Write your specifications..." className="flex-1" />
       <Button type="submit" size="sm">
         Send
       </Button>
