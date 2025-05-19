@@ -1,28 +1,36 @@
-'use server'
+"use server";
 
-import * as fs from 'node:fs'
-import * as path from 'node:path'
-import type { Message, GeminiMessage } from '@/types/chat' // Ensure this path is correct
-import { GoogleGenAI } from '@google/genai'
+import * as fs from "node:fs";
+import * as path from "node:path";
+import type { Message, GeminiMessage } from "@/types/chat"; // Ensure this path is correct
+import { GoogleGenAI } from "@google/genai";
+import { Type } from "@google/genai";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-const MAIN_MODEL = 'gemini-2.5-flash-preview-04-17'
-const SCHEMA_MODEL = 'gemini-2.0-flash'
-const MISC_MODEL = 'gemini-2.0-flash'
+const MAIN_MODEL = "gemini-2.5-flash-preview-04-17";
+const SCHEMA_MODEL = "gemini-2.0-flash";
+const MISC_MODEL = "gemini-2.0-flash";
+
+const filePath = path.join(
+  process.cwd(),
+  "src/prompts",
+  "description-to-json-database.txt"
+);
+const prompt = fs.readFileSync(filePath, "utf8");
 
 const filePathMongoPromptFile = path.join(
   process.cwd(),
   "src/prompts",
-  "from-json-to-sql.txt" // Corrected: This is the MongoDB prompt
+  "from-json-to-mongo.txt"
 );
 const mongoDbPromptFromFile = fs.readFileSync(filePathMongoPromptFile, "utf8");
 
 const filePathSqlPromptFile = path.join(
   process.cwd(),
   "src/prompts",
-  "from-json-to-mongo.txt" // Corrected: This is the SQL prompt
+  "from-json-to-sql.txt"
 );
 const sqlPromptFromFile = fs.readFileSync(filePathSqlPromptFile, "utf8");
 
@@ -46,6 +54,8 @@ export async function sendUserMessage(
 
   const response = await chat.sendMessage({ message: userMessage });
   const responseText = response.text || "";
+
+  console.log(response);
 
   const updatedHistory = chat.getHistory() as GeminiMessage[];
 
@@ -84,52 +94,49 @@ export async function generateDatabaseScriptFromDiagram(
   diagram: string,
   databaseType: "sql" | "mongo"
 ): Promise<string> {
-  let systemInstructionText = "";
-  let userPromptText = "";
+  let systemContext: string;
 
   switch (databaseType) {
     case "sql": {
-      // Extract the system instruction part from sqlPromptFromFile (for SQL)
-      const sqlPromptLines = sqlPromptFromFile.split("\\n");
-      // Assuming the relevant instruction for SQL generation is from the beginning of the file up to a certain marker
-      systemInstructionText = sqlPromptLines
-        .slice(2, sqlPromptLines.indexOf("    El script generado debe:"))
-        .join("\\n");
-      userPromptText = `Given the following diagram, generate SQL code to create the database schema. The diagram is in JSON format. The output should be only the SQL code.
-Diagram:
-${diagram}`;
+      systemContext = sqlPromptFromFile;
       break;
     }
     case "mongo": {
-      // Extract the system instruction part from mongoDbPromptFromFile (for MongoDB)
-      const mongoPromptLines = mongoDbPromptFromFile.split("\\n");
-      // Assuming the relevant instruction for MongoDB generation is from the beginning of the file up to a certain marker
-      systemInstructionText = mongoPromptLines
-        .slice(1, mongoPromptLines.indexOf("    El script generado debe:"))
-        .join("\\n");
-      userPromptText = `Given the following diagram, generate a MongoDB initialization script. The diagram is in JSON format. The output should be only the JavaScript code for MongoDB Shell.
-Diagram:
-${diagram}`;
+      systemContext = mongoDbPromptFromFile;
       break;
     }
     default:
       return "Invalid database type specified.";
   }
 
+  const response_schema = {
+    type: Type.OBJECT,
+    properties: {
+      schema: {
+        description: "The full schema in a string",
+        type: Type.STRING,
+      },
+    },
+    required: ["schema"],
+  };
+
   const response = await ai.models.generateContent({
-    model: SCHEMA_MODEL,
-    contents: [
-      { role: "user", parts: [{ text: systemInstructionText }] }, // System-like instruction
-      { role: "user", parts: [{ text: userPromptText }] }, // Actual user prompt with diagram
-    ],
+    model: "gemini-2.0-flash",
+    contents: `${diagram}`,
     config: {
-      responseMimeType: "text/plain",
+      responseSchema: response_schema,
+      systemInstruction: {
+        role: "user",
+        parts: [{ text: systemContext }],
+      },
+      responseMimeType: "application/json",
     },
   });
 
+  console.log(response);
   const text = response?.text;
   if (text) {
-    return text;
+    return JSON.parse(text).schema;
   }
   return "No response text from Gemini";
 }
