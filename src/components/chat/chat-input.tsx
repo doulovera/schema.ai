@@ -24,8 +24,8 @@ export function ChatInput() {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input placeholder="Write your specifications..." className="flex-1" />
-      <Button type="submit" size="sm">
+      <Input placeholder="Write your specifications..." className="flex-1 py-6" />
+      <Button type="submit" className="py-6">
         Send
       </Button>
     </form>
