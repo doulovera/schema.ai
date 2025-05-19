@@ -28,7 +28,6 @@ export function parseJsonToObject(jsonString: string): Table[] {
 
   try {
     const schema: DatabaseSchema = JSON.parse(jsonString);
-    console.log({schema})
 
     if (!schema || !schema.database || !schema.database.tables) {
       console.error("Estructura JSON inválida.");
