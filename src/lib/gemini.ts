@@ -38,61 +38,61 @@ const sqlPromptFromFile = fs.readFileSync(filePathSqlPromptFile, "utf8");
 
 export async function sendUserMessage(
   currentHistory: GeminiMessage[],
-  userMessage: string
+  userMessage: string,
 ): Promise<{ responseText: string; updatedHistory: GeminiMessage[] }> {
   const chat = ai.chats.create({
     model: MAIN_MODEL,
     history: currentHistory,
     config: {
-      responseMimeType: "application/json",
+      responseMimeType: 'application/json',
       systemInstruction: {
-        role: "user",
+        role: 'user',
         parts: [{ text: prompt }],
       },
     },
-  });
+  })
 
-  const response = await chat.sendMessage({ message: userMessage });
-  const responseText = response.text || "";
+  const response = await chat.sendMessage({ message: userMessage })
+  const responseText = response.text || ''
 
   console.log(response);
 
   const updatedHistory = chat.getHistory() as GeminiMessage[];
 
-  return { responseText, updatedHistory };
+  return { responseText, updatedHistory }
 }
 
 export async function normalizeChat(
-  threadHistory: Message[]
+  threadHistory: Message[],
 ): Promise<GeminiMessage[]> {
   return threadHistory.map((thread) => ({
     role: thread.role,
     parts: [{ text: thread.diagram }],
-  }));
+  }))
 }
 
 export async function compareJsonSchemas(
   oldJson: string,
-  newJson: string
+  newJson: string,
 ): Promise<{ summary: string; newSchema?: object }> {
   const responseSummary = await ai.models.generateContent({
     model: MISC_MODEL,
     contents: `Compare the following two JSON schemas and provide a summary of the differences:\\n\\nOld JSON:\\n${oldJson}\\n\\nNew JSON:\\n${JSON.stringify(
-      newJson
+      newJson,
     )}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in the same language as the input JSON schemas.`,
     config: {
-      responseMimeType: "text/plain",
+      responseMimeType: 'text/plain',
     },
-  });
+  })
 
-  const summary = responseSummary?.text || "No summary text from Gemini";
+  const summary = responseSummary?.text || 'No summary text from Gemini'
 
-  return { summary, newSchema: {} };
+  return { summary, newSchema: {} }
 }
 
 export async function generateDatabaseScriptFromDiagram(
   diagram: string,
-  databaseType: "sql" | "mongo"
+  databaseType: 'sql' | 'mongo',
 ): Promise<string> {
   let systemContext: string;
 
@@ -106,7 +106,7 @@ export async function generateDatabaseScriptFromDiagram(
       break;
     }
     default:
-      return "Invalid database type specified.";
+      return 'Invalid database type specified.'
   }
 
   const response_schema = {
@@ -131,12 +131,12 @@ export async function generateDatabaseScriptFromDiagram(
       },
       responseMimeType: "application/json",
     },
-  });
+  })
 
   console.log(response);
   const text = response?.text;
   if (text) {
     return JSON.parse(text).schema;
   }
-  return "No response text from Gemini";
+  return 'No response text from Gemini'
 }

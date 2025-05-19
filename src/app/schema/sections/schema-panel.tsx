@@ -1,24 +1,11 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { ChevronUp } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TabTextSelector from "@/components/chat/tab-text-selector";
-import { useChatStore } from "@/stores/chat";
-import { generateDatabaseScriptFromDiagram } from "@/lib/gemini";
 
-export default function TextPanel({ hidePanel }: { hidePanel: () => void }) {
-  const { chatSchemas, isLoading } = useChatStore();
-
-  console.log(chatSchemas);
-
-  const [scripts, setScripts] = useState([
-    { type: "SQL", text: chatSchemas.sql || "" },
-    { type: "MongoDB", text: chatSchemas.mongo || "" },
-  ]);
-
+export default function SchemaPanel({ hidePanel }: {  hidePanel: () => void }) {
   const [activeTab, setActiveTab] = useState(0);
-
+  const scripts = [{ type: "SQL", text: "hola mundo from sql" }, { type: "MongoDB", text: "hola mundo from mongo db" }];
   return (
     <div className="flex flex-col h-full border-t border-border bg-card text-foreground">
       <div className="p-4 border-b border-border flex justify-between items-center">
@@ -26,10 +13,10 @@ export default function TextPanel({ hidePanel }: { hidePanel: () => void }) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => hidePanel()}
+          onClick={hidePanel}
           aria-label="Ocultar Espacio 3"
         >
-          <ChevronUp className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </Button>
       </div>
       <div className="flex flex-col p-4">
@@ -48,7 +35,7 @@ export default function TextPanel({ hidePanel }: { hidePanel: () => void }) {
         </div>
         <textarea
           className="w-full h-40 p-2 border border-border rounded-b-md rounded-t-none bg-muted text-foreground resize-none -mt-1"
-          value={isLoading ? "Generando script..." : scripts[activeTab]?.text}
+          value={scripts[activeTab]?.text}
           readOnly
         />
       </div>
