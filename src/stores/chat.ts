@@ -100,7 +100,7 @@ export const useChatStore = create<ChatStore>()(
 
           set({
             chatSchemas: {
-              sql: sqlSchema || '',
+              sql: sqlSchema.replaceAll(';;', ';\n') || '',
               mongo: mongodbSchema || '',
             },
           })

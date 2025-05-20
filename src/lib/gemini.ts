@@ -75,7 +75,7 @@ export async function compareJsonSchemas(
     model: MISC_MODEL,
     contents: `Compare the following two JSON schemas and provide a summary of the differences:\\n\\nOld JSON:\\n${oldJson}\\n\\nNew JSON:\\n${JSON.stringify(
       newJson,
-    )}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in Spanish. Don't say the reference as "old JSON schema" or "new JSON schema", but refer them as diagram. Also, be direct, don't make preambles like "this is the summary"`,
+    )}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in Spanish. Don't say the reference as "old JSON schema" or "new JSON schema", but refer them as diagram. Also, be direct, PLEASE DON'T MAKE PREAMBLES like "here is the summary of the differences" or "the differences are".`,
     config: {
       responseMimeType: 'text/plain',
     },
