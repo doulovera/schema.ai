@@ -181,12 +181,13 @@ export async function generateDatabaseScriptFromDiagram(
       model: SCHEMA_MODEL,
       contents: `${diagram}`,
       config: {
+        responseMimeType: 'application/json',
         responseSchema: response_schema,
         systemInstruction: {
           role: 'user',
           parts: [{ text: systemContext }],
         },
-      }
+      },
     })
 
     const text = response?.text
