@@ -3,17 +3,18 @@
 import Thread, { type IThread } from '@/models/Thread'
 import dbConnect from './db'
 
-export async function createThread(data: Partial<IThread>) {
+export async function createThread(userId: string, data: Partial<IThread>) {
   await dbConnect()
   const newThread = await Thread.create({
     chat_id: data.chat_id,
+    user_id: userId,
     diagram: data.diagram,
     schemas: {
       sql: data.schemas?.sql,
       mongo: data.schemas?.mongo,
     },
     conversation: data.conversation,
-  });
+  })
   return JSON.parse(JSON.stringify(newThread))
 }
 
@@ -37,4 +38,10 @@ export async function updateThread(chatId: string, data: Partial<IThread>) {
     return null
   }
   return JSON.parse(JSON.stringify(updatedThread))
+}
+
+export async function getThreadByUserId(userId: string): Promise<IThread[]> {
+  await dbConnect()
+  const threads = await Thread.find({ user_id: userId })
+  return JSON.parse(JSON.stringify(threads))
 }

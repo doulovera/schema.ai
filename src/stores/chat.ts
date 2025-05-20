@@ -1,6 +1,9 @@
+'use client'
+
+import type { IThread } from '@/models/Thread'
+import type { Roles, Message } from '@/types/chat'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { Roles, Message } from '@/types/chat'
 import {
   sendUserMessage,
   normalizeChat,
@@ -8,6 +11,7 @@ import {
   generateDatabaseScriptFromDiagram,
 } from '@/lib/gemini'
 import { updateThread, getThread, createThread } from '@/lib/thread'
+import { useConfigStore } from './config'
 
 const ROLES: Record<string, Roles> = {
   user: 'user',
@@ -24,7 +28,7 @@ interface ChatStore {
 
   addMessageToChat: (role: Roles, text: string, diagram?: string) => void
   handleSendMessage: (messageText: string, chatId: string) => Promise<void>
-  loadChatThread: (chatId: string) => Promise<void>
+  loadChatThread: (chatId: string, thread: IThread | null) => Promise<void>
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -109,7 +113,7 @@ export const useChatStore = create<ChatStore>()(
             )
             summaryForChatMessage = comparisonResult.summary
           } else if (aiDiagramResponse && !currentDiagramInStore) {
-            summaryForChatMessage = 'Initial diagram generated.'
+            summaryForChatMessage = 'He generado el diagrama. ☝️🤓'
           }
 
           // Añade el mensaje de resumen al chat, con el diagrama como payload
@@ -144,7 +148,11 @@ export const useChatStore = create<ChatStore>()(
               schemas: newChatSchemas,
             })
           } else {
-            const newThread = await createThread({
+            const { userId } = useConfigStore.getState()
+            if (!userId) {
+              throw new Error('User ID is not set in the config store.')
+            }
+            const newThread = await createThread(userId, {
               chat_id: chatId,
               diagram: aiDiagramResponse,
               conversation: finalChatHistoryForDB,
@@ -163,16 +171,15 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      loadChatThread: async (chatId: string) => {
+      loadChatThread: async (chatId: string, thread: IThread | null) => {
         set({ isLoading: true })
         try {
-          const thread = await getThread(chatId)
           if (thread) {
             set({
               chatId: thread.chat_id,
               chatHistory: thread.conversation,
-              chatDiagram: thread.diagram, // Load the latest overall diagram for the thread
-              chatSchemas: thread.schemas, // For display of SQL/MongoDB schemas
+              chatDiagram: thread.diagram,
+              chatSchemas: thread.schemas,
               isLoading: false,
             })
           } else {

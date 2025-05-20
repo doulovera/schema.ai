@@ -1,6 +1,6 @@
-import Link from "next/link"
-import Image from "next/image"
-import { ArrowRight, Database, Sparkles, Code, Zap, Github } from "lucide-react"
+import Link from 'next/link'
+import Image from 'next/image'
+import { ArrowRight, Database, Sparkles, Code, Zap, Github } from 'lucide-react'
 import {
   SignInButton,
   SignUpButton,
@@ -9,9 +9,15 @@ import {
   UserButton,
 } from '@clerk/nextjs'
 
-import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { GITHUB_REPO } from "@/constants/links"
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { GITHUB_REPO } from '@/constants/links'
+import { PATHS } from '@/constants/paths'
 
 export default function LandingPage() {
   return (
@@ -59,20 +65,27 @@ export default function LandingPage() {
                 Follow along on GitHub
               </Link>
               <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
-                Construye Bases de Datos{" "}
+                Construye Bases de Datos{' '}
                 <span className="inline-block bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-                con&nbsp;IA
+                  con&nbsp;IA
                 </span>
               </h1>
               <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8 text-balance">
-                Genera, visualiza y optimiza tus esquemas de base de datos a través del lenguaje natural. No más diseño manual de esquemas: solo describe lo que necesitas.
+                Genera, visualiza y optimiza tus esquemas de base de datos a
+                través del lenguaje natural. No más diseño manual de esquemas:
+                solo describe lo que necesitas.
               </p>
               <div className="space-x-4">
-                <Link href="/schema">
-                  <Button className="bg-gradient-to-r from-primary to-purple-500 px-8">Comenzar</Button>
+                <Link href={PATHS.CHAT}>
+                  <Button className="bg-gradient-to-r from-primary to-purple-500 px-8">
+                    Comenzar
+                  </Button>
                 </Link>
                 <Link href="#features">
-                  <Button variant="outline" className="border-primary/20 px-8 backdrop-blur-sm">
+                  <Button
+                    variant="outline"
+                    className="border-primary/20 px-8 backdrop-blur-sm"
+                  >
                     Ver más
                   </Button>
                 </Link>
@@ -104,7 +117,8 @@ export default function LandingPage() {
                 </span>
               </h2>
               <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                Schema.ai provides powerful tools to streamline your database design workflow
+                Schema.ai provides powerful tools to streamline your database
+                design workflow
               </p>
             </div>
             <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-2">
@@ -114,8 +128,13 @@ export default function LandingPage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Sparkles className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">Generación AI-Powered</CardTitle>
-                  <CardDescription>Generación de esquemas de base de datos completos a partir de descripciones en lenguaje natural</CardDescription>
+                  <CardTitle className="text-xl">
+                    Generación AI-Powered
+                  </CardTitle>
+                  <CardDescription>
+                    Generación de esquemas de base de datos completos a partir
+                    de descripciones en lenguaje natural
+                  </CardDescription>
                 </CardHeader>
               </Card>
               <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
@@ -124,8 +143,13 @@ export default function LandingPage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Database className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">Editor Visual de Esquema</CardTitle>
-                  <CardDescription>Editor visual intuitivo para ajustar tu estructura de base de datos</CardDescription>
+                  <CardTitle className="text-xl">
+                    Editor Visual de Esquema
+                  </CardTitle>
+                  <CardDescription>
+                    Editor visual intuitivo para ajustar tu estructura de base
+                    de datos
+                  </CardDescription>
                 </CardHeader>
               </Card>
               <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
@@ -134,8 +158,12 @@ export default function LandingPage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Code className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">Generación de Código</CardTitle>
-                  <CardDescription>¡Exporta tu esquema a SQL, MongoDB y (en un futuro) más!</CardDescription>
+                  <CardTitle className="text-xl">
+                    Generación de Código
+                  </CardTitle>
+                  <CardDescription>
+                    ¡Exporta tu esquema a SQL, MongoDB y (en un futuro) más!
+                  </CardDescription>
                 </CardHeader>
               </Card>
               <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
@@ -144,8 +172,12 @@ export default function LandingPage() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Zap className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">Optimiza el Rendimiento</CardTitle>
-                  <CardDescription>Sugerencias de IA para índices y optimizaciones</CardDescription>
+                  <CardTitle className="text-xl">
+                    Optimiza el Rendimiento
+                  </CardTitle>
+                  <CardDescription>
+                    Sugerencias de IA para índices y optimizaciones
+                  </CardDescription>
                 </CardHeader>
               </Card>
             </div>
@@ -242,16 +274,24 @@ export default function LandingPage() {
                 </span>
               </h2>
               <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                Sé uno de los desarrolladores que están construyendo mejores bases de datos más rápido con schema.ai
+                Sé uno de los desarrolladores que están construyendo mejores
+                bases de datos más rápido con schema.ai
               </p>
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Link href="/sign-in">
-                  <Button size="lg" className="bg-gradient-to-r from-primary to-purple-500 px-8">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-primary to-purple-500 px-8"
+                  >
                     Regístrate gratis <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="/schema">
-                  <Button variant="outline" size="lg" className="border-primary/20 px-8 backdrop-blur-sm">
+                <Link href={PATHS.CHAT}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-primary/20 px-8 backdrop-blur-sm"
+                  >
                     Empezar
                   </Button>
                 </Link>
