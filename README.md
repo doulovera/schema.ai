@@ -1,14 +1,12 @@
 # schema.ai
 
-[](https://img.shields.io/badge/version-1.0.0-blue)
-
-[](https://img.shields.io/badge/license-MIT-green)
-
-[](https://img.shields.io/badge/status-active-brightgreen)
-
-[](https://img.shields.io/badge/language-JavaScript-yellow)
-
-[](https://img.shields.io/badge/platform-Node.js-339933?logo=node.js&logoColor=white)
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue" />
+  <img src="https://img.shields.io/badge/license-MIT-green" />
+  <img src="https://img.shields.io/badge/status-active-brightgreen" />
+  <img src="https://img.shields.io/badge/language-typescript-blue" />
+  <img src="https://img.shields.io/badge/platform-Node.js-339933?logo=node.js&logoColor=white" />
+</p>
 
 **schema.ai** es una herramienta impulsada por inteligencia artificial que permite diseñar estructuras de bases de datos utilizando lenguaje natural. A través de una interfaz intuitiva, los usuarios pueden describir sus necesidades en lenguaje cotidiano, y la aplicación se encarga de generar automáticamente los scripts necesarios para crear las estructuras en bases de datos relacionales (SQL) y no relacionales (MongoDB).
 
