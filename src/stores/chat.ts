@@ -58,6 +58,7 @@ export const useChatStore = create<ChatStore>()(
           addMessageToChat,
           chatHistory: currentLocalHistory,
           chatDiagram: currentDiagramInStore,
+          chatSchemas,
         } = get()
 
         addMessageToChat(ROLES.user, messageText)
@@ -66,40 +67,10 @@ export const useChatStore = create<ChatStore>()(
         const normalizedHistory = await normalizeChat(currentLocalHistory || [])
 
         try {
-          const { responseText, updatedHistory: geminiHistory } =
-            await sendUserMessage(normalizedHistory, messageText)
-          console.log(responseText)
-          let isDiagramPayload = true
-          try {
-            JSON.parse(responseText) // Intenta parsear, si falla, no es un diagrama JSON
-          } catch (e) {
-            isDiagramPayload = false // Es un mensaje de texto (error de validación o similar)
-          }
-
-          if (!isDiagramPayload) {
-            // responseText es un mensaje de validación/error
-            addMessageToChat(ROLES.assistant, responseText) // Muestra el mensaje en el chat
-
-            // Actualiza el hilo en la base de datos con la conversación que incluye el mensaje
-            const currentChatHistoryForDB = get().chatHistory || []
-            const threadExists = await getThread(chatId)
-            if (threadExists) {
-              await updateThread(chatId, {
-                conversation: currentChatHistoryForDB,
-                // No se actualiza el diagrama ni los esquemas si la entrada no fue válida
-              })
-            } else {
-              await createThread({
-                chat_id: chatId,
-                conversation: currentChatHistoryForDB,
-              })
-            }
-            set({ isLoading: false })
-            return // Termina el procesamiento aquí
-          }
-
-          // responseText es un diagrama (isDiagramPayload es true)
-          const aiDiagramResponse = responseText // Renombrar para claridad con el código existente
+          const { responseText: aiDiagramResponse } = await sendUserMessage(
+            normalizedHistory,
+            messageText,
+          )
 
           let summaryForChatMessage = 'Received new diagram.'
           if (
@@ -116,11 +87,10 @@ export const useChatStore = create<ChatStore>()(
             summaryForChatMessage = 'He generado el diagrama. ☝️🤓'
           }
 
-          // Añade el mensaje de resumen al chat, con el diagrama como payload
           addMessageToChat(
             ROLES.assistant,
             summaryForChatMessage,
-            aiDiagramResponse, // El string JSON del diagrama
+            aiDiagramResponse,
           )
 
           const [sqlSchema, mongodbSchema] = await Promise.all([
@@ -128,24 +98,22 @@ export const useChatStore = create<ChatStore>()(
             generateDatabaseScriptFromDiagram(aiDiagramResponse, 'mongo'),
           ])
 
-          const newChatSchemas = {
-            sql: sqlSchema || '',
-            mongo: mongodbSchema || '',
-          }
           set({
-            chatSchemas: newChatSchemas,
+            chatSchemas: {
+              sql: sqlSchema.replaceAll(';;', ';\n') || '',
+              mongo: mongodbSchema || '',
+            },
           })
 
-          set({ chatDiagram: aiDiagramResponse }) // Almacena el nuevo diagrama (string JSON)
+          set({ chatDiagram: aiDiagramResponse })
 
-          // Actualiza el hilo en la base de datos
-          const finalChatHistoryForDB = get().chatHistory || []
-          const threadExists = await getThread(chatId)
-          if (threadExists) {
+          const thread = await getThread(chatId)
+          if (thread) {
+            const updatedConversationHistory = get().chatHistory || []
             await updateThread(chatId, {
               diagram: aiDiagramResponse,
-              conversation: finalChatHistoryForDB,
-              schemas: newChatSchemas,
+              conversation: updatedConversationHistory,
+              schemas: chatSchemas,
             })
           } else {
             const { userId } = useConfigStore.getState()
@@ -155,10 +123,10 @@ export const useChatStore = create<ChatStore>()(
             const newThread = await createThread(userId, {
               chat_id: chatId,
               diagram: aiDiagramResponse,
-              conversation: finalChatHistoryForDB,
-              schemas: newChatSchemas,
+              conversation: get().chatHistory || [],
+              schemas: chatSchemas,
             })
-            // set({ chatId: newThread.chat_id }); // chatId ya está seteado
+            set({ chatId: newThread.chat_id })
           }
         } catch (error) {
           console.error('Error sending message:', error)

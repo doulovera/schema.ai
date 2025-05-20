@@ -40,7 +40,7 @@ export async function updateThread(chatId: string, data: Partial<IThread>) {
   return JSON.parse(JSON.stringify(updatedThread))
 }
 
-export async function getThreadByUserId(userId: string): Promise<IThread[]> {
+export async function getThreadsByUserId(userId: string): Promise<IThread[]> {
   await dbConnect()
   const threads = await Thread.find({ user_id: userId })
   return JSON.parse(JSON.stringify(threads))

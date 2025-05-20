@@ -1,7 +1,7 @@
 type Props = {
   setActiveTab: (tabIndex: number) => void
   activeTab: number
-  tab: { type: string; text: string }
+  tab: { type: string; title: string; text: string }
   tabIndex: number
 }
 

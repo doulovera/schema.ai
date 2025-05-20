@@ -176,22 +176,26 @@ export async function generateDatabaseScriptFromDiagram(
     required: ['schema'],
   }
 
-  const response = await ai.models.generateContent({
-    model: SCHEMA_MODEL,
-    contents: `${diagram}`,
-    config: {
-      responseSchema: response_schema,
-      systemInstruction: {
-        role: 'user',
-        parts: [{ text: systemContext }],
-      },
-      responseMimeType: 'application/json',
-    },
-  })
+  try {
+    const response = await ai.models.generateContent({
+      model: SCHEMA_MODEL,
+      contents: `${diagram}`,
+      config: {
+        responseSchema: response_schema,
+        systemInstruction: {
+          role: 'user',
+          parts: [{ text: systemContext }],
+        },
+      }
+    })
 
-  const text = response?.text
-  if (text) {
-    return JSON.parse(text).schema
+    const text = response?.text
+    if (text) {
+      return JSON.parse(text).schema
+    }
+    return 'No response text from Gemini'
+  } catch (error) {
+    console.error('Error generating database script:', error)
+    return 'Error generating database script'
   }
-  return 'No response text from Gemini'
 }
