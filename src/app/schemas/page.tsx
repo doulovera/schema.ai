@@ -1,21 +1,13 @@
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+
 import { PATHS } from '@/constants/paths'
 import { getThreadsByUserId } from '@/lib/thread'
-import { getRelativeTime } from '@/utils/get-relative-time'
 import { SignedIn, UserButton } from '@clerk/nextjs'
 import { currentUser } from '@clerk/nextjs/server'
 import { Database, PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Fragment } from 'react'
+import { ThreadList } from './thread-list'
 
 export default async function SchemasList() {
   const user = await currentUser()
@@ -30,7 +22,12 @@ export default async function SchemasList() {
     return JSON.parse(diagram)?.database?.name
   }
 
-  const updatedAt = (threadUpdatedAt: string) => new Date(threadUpdatedAt)
+  const mappedThreads = threads.map((thread) => {
+    return {
+      ...thread,
+      dbTitle: getDatabaseTitle(thread.diagram),
+    }
+  })
 
   return (
     <div className="container mx-auto py-8 max-w-5xl">
@@ -61,45 +58,7 @@ export default async function SchemasList() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {threads.map((thread) => (
-          <Fragment key={thread.id}>
-            <Link href={`${PATHS.CHAT}/${thread.chat_id}`} className="block">
-              <Card className="h-full transition-all hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="line-clamp-1">
-                    {getDatabaseTitle(thread.diagram)}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Last updated: {getRelativeTime(thread.updatedAt)}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {thread.conversation?.at(-1)?.message}
-                  </p>
-                </CardContent>
-                <CardFooter className="text-xs text-muted-foreground">
-                  {updatedAt(thread.updatedAt).toLocaleDateString()} at{' '}
-                  {updatedAt(thread.updatedAt).toLocaleTimeString()}
-                </CardFooter>
-              </Card>
-            </Link>
-          </Fragment>
-        ))}
-      </div>
-
-      {threads.length === 0 && (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium">No tienes chats todavía</h3>
-          <p className="text-muted-foreground mt-1">
-            Inicia una nueva conversación para crear tu esquema de base de datos
-          </p>
-          <Link href={PATHS.CHAT} className="mt-4 inline-block">
-            <Button>Iniciar nuevo chat</Button>
-          </Link>
-        </div>
-      )}
+      <ThreadList threads={mappedThreads} />
     </div>
   )
 }
