@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# schema.ai
 
-## Getting Started
+[](https://img.shields.io/badge/version-1.0.0-blue)
 
-First, run the development server:
+[](https://img.shields.io/badge/license-MIT-green)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+[](https://img.shields.io/badge/status-active-brightgreen)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[](https://img.shields.io/badge/language-JavaScript-yellow)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+[](https://img.shields.io/badge/platform-Node.js-339933?logo=node.js&logoColor=white)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**schema.ai** es una herramienta impulsada por inteligencia artificial que permite diseñar estructuras de bases de datos utilizando lenguaje natural. A través de una interfaz intuitiva, los usuarios pueden describir sus necesidades en lenguaje cotidiano, y la aplicación se encarga de generar automáticamente los scripts necesarios para crear las estructuras en bases de datos relacionales (SQL) y no relacionales (MongoDB).
 
-## Learn More
+## ✨ Características principales
 
-To learn more about Next.js, take a look at the following resources:
+- **Diseño de bases de datos mediante lenguaje natural**: Describe la estructura de tu base de datos en lenguaje cotidiano, y schema.ai interpretará y generará el diseño correspondiente.
+- **Generación automática de scripts**:
+    - **SQL**: Crea scripts para bases de datos relacionales como PostgreSQL y MySQL.
+    - **MongoDB**: Genera scripts en shell para bases de datos no relacionales.
+- **Interfaz moderna y responsiva**: Desarrollada con Next.js y TypeScript, ofreciendo una experiencia de usuario fluida y adaptable a diferentes dispositivos.
+- **Código abierto**: Disponible para la comunidad en GitHub, fomentando la colaboración y mejora continua.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Cómo comenzar
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clona el repositorio**:
+    
+    ```bash
+    git clone https://github.com/synapse-xyz/schema.ai.git
+    cd schema.ai
+    ```
+    
+2. **Instala las dependencias**:
+    
+    Utilizando el gestor de paquetes de tu preferencia:
+    
+    ```bash
+    pnpm install
+    # o
+    npm install
+    # o
+    yarn install
+    # o
+    bun install
+    ```
+    
+3. **Inicia el servidor de desarrollo**:
+    
+    ```bash
+    pnpm dev
+    # o
+    npm run dev
+    # o
+    yarn dev
+    # o
+    bun dev
+    ```
+    
+4. **Accede a la aplicación**:
+    
+    Abre tu navegador y navega a [http://localhost:3000](http://localhost:3000/) para comenzar a utilizar schema.ai.
+    
 
-## Deploy on Vercel
+## 🛠️ Tecnologías utilizadas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [Next.js](https://nextjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [pnpm](https://pnpm.io/)
+- [PostCSS](https://postcss.org/)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 Licencia
+
+Este proyecto está licenciado bajo la Licencia MIT.
