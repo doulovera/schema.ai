@@ -1,8 +1,9 @@
 'use client'
 
+import type { IThread } from '@/models/Thread'
+import type { Roles, Message } from '@/types/chat'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { Roles, Message } from '@/types/chat'
 import {
   sendUserMessage,
   normalizeChat,
@@ -27,7 +28,7 @@ interface ChatStore {
 
   addMessageToChat: (role: Roles, text: string, diagram?: string) => void
   handleSendMessage: (messageText: string, chatId: string) => Promise<void>
-  loadChatThread: (chatId: string) => Promise<void>
+  loadChatThread: (chatId: string, thread: IThread | null) => Promise<void>
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -138,10 +139,9 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      loadChatThread: async (chatId: string) => {
+      loadChatThread: async (chatId: string, thread: IThread | null) => {
         set({ isLoading: true })
         try {
-          const thread = await getThread(chatId)
           if (thread) {
             set({
               chatId: thread.chat_id,
