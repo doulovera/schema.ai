@@ -1,3 +1,5 @@
+'use client'
+
 export function getRelativeTime(time: string) {
   const rtf1 = new Intl.RelativeTimeFormat('en', { style: 'short' })
 
