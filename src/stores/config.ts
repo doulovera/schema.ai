@@ -27,6 +27,7 @@ export const useConfigStore = create<ConfigStore>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         isDarkMode: state.isDarkMode,
+        userId: state.userId,
       }),
     },
   ),
