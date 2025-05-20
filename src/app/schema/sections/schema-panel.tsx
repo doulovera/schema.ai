@@ -9,7 +9,10 @@ export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
   const { isLoading, chatSchemas } = useChatStore()
 
   return (
-    <div className="flex flex-col h-full border-t border-border bg-card text-foreground">
+    <div className="relative flex flex-col h-full border-t border-border bg-card text-foreground">
+      {isLoading && (
+        <div className="absolute z-100 flex items-center justify-center h-full w-full bg-black opacity-50" />
+      )}
       <div className="p-4 border-b border-border flex justify-between items-center">
         <h2 className="text-lg font-medium">Schemas</h2>
         <Button
@@ -22,9 +25,6 @@ export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
         </Button>
       </div>
       <div className="relative flex flex-col p-4">
-        {isLoading && (
-          <div className="absolute z-100 flex items-center justify-center h-full w-full bg-black opacity-50" />
-        )}
         <SchemaView schemas={chatSchemas} />
       </div>
     </div>
