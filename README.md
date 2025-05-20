@@ -10,6 +10,10 @@
 
 **schema.ai** es una herramienta impulsada por inteligencia artificial que permite diseñar estructuras de bases de datos utilizando lenguaje natural. A través de una interfaz intuitiva, los usuarios pueden describir sus necesidades en lenguaje cotidiano, y la aplicación se encarga de generar automáticamente los scripts necesarios para crear las estructuras en bases de datos relacionales (SQL) y no relacionales (MongoDB).
 
+## 🖼️ Vista previa
+
+![Vista previa de schema.ai](https://res.cloudinary.com/dyk832ts5/image/upload/v1747766513/synapse/1browser_schema-ai_smpyxd.png)
+
 ## ✨ Características principales
 
 - **Diseño de bases de datos mediante lenguaje natural**: Describe la estructura de tu base de datos en lenguaje cotidiano, y schema.ai interpretará y generará el diseño correspondiente.
