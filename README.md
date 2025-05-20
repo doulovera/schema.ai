@@ -1,5 +1,7 @@
 # schema.ai
 
+![SchemaAIBanner](https://res.cloudinary.com/dyk832ts5/image/upload/v1747766824/synapse/20250520_1416_Banner_Schema.ai_simple_compose_01jvqegdwqfe4rzd67yba1v7jy_oze1q1.jpg)
+
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-blue" />
   <img src="https://img.shields.io/badge/license-MIT-green" />
@@ -12,7 +14,7 @@
 
 ## 🖼️ Vista previa
 
-![Vista previa de schema.ai](https://res.cloudinary.com/dyk832ts5/image/upload/v1747766513/synapse/1browser_schema-ai_smpyxd.png)
+![Vista previa de schema.ai](https://res.cloudinary.com/dyk832ts5/image/upload/v1747767267/synapse/555_1x_shots_so_achqao.png)
 
 ## ✨ Características principales
 
