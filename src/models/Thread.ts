@@ -10,6 +10,8 @@ export interface IThread extends Document {
     mongo: string
   }
   conversation: Array<Message>
+  createdAt: string
+  updatedAt: string
 }
 
 const MessageSchemaContents = {
