@@ -15,6 +15,8 @@ import Chat from "../sections/chat-panel";
 import DiagramPanel from "../sections/diagram-panel";
 import SchemaPanel from "../sections/schema-panel";
 import { useChatStore } from "@/stores/chat";
+import { useConfigStore } from "@/stores/config";
+import { useUser } from "@clerk/nextjs";
 
 export default function PageContent() {
   const [panels, setPanels] = useState<{ [panel: string]: boolean }>({
@@ -25,6 +27,14 @@ export default function PageContent() {
   const { loadChatThread, chatId: storeChatId } = useChatStore();
   const params = useParams();
   const urlChatId = params.id as string;
+
+  const { user } = useUser();
+  const userId = user?.id
+  const { setUserId } = useConfigStore();
+  
+  useEffect(() => {
+    if (userId) setUserId(userId);
+  }, [userId, setUserId]);
 
   useEffect(() => {
     if (urlChatId) {
