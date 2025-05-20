@@ -20,7 +20,7 @@ export function SchemaView({
 
         {Object.entries(schemas).map(([key, schema]) => (
           <TabsContent key={key} value={key} className="mt-0 h-full">
-            <Card className="p-4 h-full border-none">
+            <Card className="p-4 h-full border-none shadow-none">
               <CodeBlock language={key} script={schema} />
             </Card>
           </TabsContent>
