@@ -24,7 +24,7 @@ export default function TabTextSelector({
                 `}
       type="button"
     >
-      {tab.title}
+      {tab.text}
     </button>
   )
 }
