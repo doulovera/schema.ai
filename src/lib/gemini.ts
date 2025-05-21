@@ -1,10 +1,15 @@
 'use server'
 
-import * as fs from 'node:fs'
-import * as path from 'node:path'
 import type { Message, GeminiMessage } from '@/types/chat' // Ensure this path is correct
 import { GoogleGenAI } from '@google/genai'
 import { Type } from '@google/genai'
+import {
+  descriptionToJsonDatabasePrompt,
+  fromJsonToMongoPrompt,
+  fromJsonToSqlPrompt,
+  summarizeChangesPrompt,
+  validateUserIntentPrompt,
+} from '@/lib/prompts'
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
@@ -12,37 +17,6 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
 const MAIN_MODEL = 'gemini-2.5-flash-preview-04-17'
 const SCHEMA_MODEL = 'gemini-2.0-flash'
 const MISC_MODEL = 'gemini-2.0-flash'
-
-const filePath = path.join(
-  process.cwd(),
-  'src/prompts',
-  'description-to-json-database.txt',
-)
-const prompt = fs.readFileSync(filePath, 'utf8')
-
-const filePathMongoPromptFile = path.join(
-  process.cwd(),
-  'src/prompts',
-  'from-json-to-mongo.txt',
-)
-const mongoDbPromptFromFile = fs.readFileSync(filePathMongoPromptFile, 'utf8')
-
-const filePathSqlPromptFile = path.join(
-  process.cwd(),
-  'src/prompts',
-  'from-json-to-sql.txt',
-)
-const sqlPromptFromFile = fs.readFileSync(filePathSqlPromptFile, 'utf8')
-
-const filePathValidateIntentPromptFile = path.join(
-  process.cwd(),
-  'src/prompts',
-  'validate-user-intent.txt',
-)
-const validateIntentPromptFromFile = fs.readFileSync(
-  filePathValidateIntentPromptFile,
-  'utf8',
-)
 
 interface ValidationResult {
   isValid: boolean
@@ -58,7 +32,7 @@ export async function validateUserIntent(
     config: {
       systemInstruction: {
         role: 'user',
-        parts: [{ text: validateIntentPromptFromFile }],
+        parts: [{ text: validateUserIntentPrompt }],
       },
       responseMimeType: 'application/json',
     },
@@ -94,7 +68,7 @@ export async function sendUserMessage(
       responseMimeType: 'application/json',
       systemInstruction: {
         role: 'user',
-        parts: [{ text: prompt }],
+        parts: [{ text: descriptionToJsonDatabasePrompt }],
       },
     },
   })
@@ -113,13 +87,6 @@ export async function normalizeChat(
   }))
 }
 
-const compareSchemasPromptPath = path.join(
-  process.cwd(),
-  'src/prompts',
-  'summarize-changes.txt',
-)
-const compareSchemasPrompt = fs.readFileSync(compareSchemasPromptPath, 'utf8')
-
 export async function compareJsonSchemas(
   oldJson: string,
   newJson: string,
@@ -134,7 +101,7 @@ export async function compareJsonSchemas(
     config: {
       systemInstruction: {
         role: 'user',
-        parts: [{ text: compareSchemasPrompt }],
+        parts: [{ text: summarizeChangesPrompt }],
       },
       responseMimeType: 'text/plain',
     },
@@ -153,11 +120,11 @@ export async function generateDatabaseScriptFromDiagram(
 
   switch (databaseType) {
     case 'sql': {
-      systemContext = sqlPromptFromFile
+      systemContext = fromJsonToSqlPrompt
       break
     }
     case 'mongo': {
-      systemContext = mongoDbPromptFromFile
+      systemContext = fromJsonToMongoPrompt
       break
     }
     default:
