@@ -34,6 +34,55 @@ const filePathSqlPromptFile = path.join(
 )
 const sqlPromptFromFile = fs.readFileSync(filePathSqlPromptFile, 'utf8')
 
+const filePathValidateIntentPromptFile = path.join(
+  process.cwd(),
+  'src/prompts',
+  'validate-user-intent.txt',
+)
+const validateIntentPromptFromFile = fs.readFileSync(
+  filePathValidateIntentPromptFile,
+  'utf8',
+)
+
+interface ValidationResult {
+  isValid: boolean
+  message: string
+}
+
+export async function validateUserIntent(
+  userMessage: string,
+): Promise<ValidationResult> {
+  const response = await ai.models.generateContent({
+    model: MISC_MODEL, // Using a smaller model for validation
+    contents: userMessage,
+    config: {
+      systemInstruction: {
+        role: 'user',
+        parts: [{ text: validateIntentPromptFromFile }],
+      },
+      responseMimeType: 'application/json',
+    },
+  })
+
+  const text = response?.text
+  if (text) {
+    try {
+      const validationResult = JSON.parse(text) as ValidationResult
+      return validationResult
+    } catch (error) {
+      console.error('Error parsing validation response:', error)
+      return {
+        isValid: false,
+        message: 'Error al procesar la validación de la solicitud.',
+      } // Default to not valid if parsing fails
+    }
+  }
+  return {
+    isValid: false,
+    message: 'No se recibió respuesta del servicio de validación.',
+  } // Default to not valid if no text response
+}
+
 export async function sendUserMessage(
   currentHistory: GeminiMessage[],
   userMessage: string,
@@ -49,12 +98,9 @@ export async function sendUserMessage(
       },
     },
   })
-
   const response = await chat.sendMessage({ message: userMessage })
   const responseText = response.text || ''
-
   const updatedHistory = chat.getHistory() as GeminiMessage[]
-
   return { responseText, updatedHistory }
 }
 
@@ -67,21 +113,34 @@ export async function normalizeChat(
   }))
 }
 
+const compareSchemasPromptPath = path.join(
+  process.cwd(),
+  'src/prompts',
+  'summarize-changes.txt',
+)
+const compareSchemasPrompt = fs.readFileSync(compareSchemasPromptPath, 'utf8')
+
 export async function compareJsonSchemas(
   oldJson: string,
   newJson: string,
 ): Promise<{ summary: string; newSchema?: object }> {
-  const responseSummary = await ai.models.generateContent({
+  const contents = `Esquema anterior:\n${oldJson}\n\nEsquema nuevo:\n${JSON.stringify(
+    newJson,
+  )}`
+
+  const response = await ai.models.generateContent({
     model: MISC_MODEL,
-    contents: `Compare the following two JSON schemas and provide a summary of the differences:\\n\\nOld JSON:\\n${oldJson}\\n\\nNew JSON:\\n${JSON.stringify(
-      newJson,
-    )}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in Spanish. Don't say the reference as "old JSON schema" or "new JSON schema", but refer them as diagram. Also, be direct, PLEASE DON'T MAKE PREAMBLES like "here is the summary of the differences" or "the differences are".`,
+    contents,
     config: {
+      systemInstruction: {
+        role: 'user',
+        parts: [{ text: compareSchemasPrompt }],
+      },
       responseMimeType: 'text/plain',
     },
   })
 
-  const summary = responseSummary?.text || 'No summary text from Gemini'
+  const summary = response?.text?.trim() || 'No se recibió resumen del modelo.'
 
   return { summary, newSchema: {} }
 }
@@ -118,15 +177,15 @@ export async function generateDatabaseScriptFromDiagram(
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: diagram,
+      model: SCHEMA_MODEL,
+      contents: `${diagram}`,
       config: {
+        responseMimeType: 'application/json',
         responseSchema: response_schema,
         systemInstruction: {
           role: 'user',
           parts: [{ text: systemContext }],
         },
-        responseMimeType: 'application/json',
       },
     })
 
