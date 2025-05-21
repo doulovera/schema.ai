@@ -18,6 +18,8 @@ const MAIN_MODEL = 'gemini-2.5-flash-preview-04-17'
 const SCHEMA_MODEL = 'gemini-2.0-flash'
 const MISC_MODEL = 'gemini-2.0-flash'
 
+// Todos los prompts se usan directamente desde prompts.ts
+
 interface ValidationResult {
   isValid: boolean
   message: string
@@ -33,55 +35,6 @@ export async function validateUserIntent(
       systemInstruction: {
         role: 'user',
         parts: [{ text: validateUserIntentPrompt }],
-      },
-      responseMimeType: 'application/json',
-    },
-  })
-
-  const text = response?.text
-  if (text) {
-    try {
-      const validationResult = JSON.parse(text) as ValidationResult
-      return validationResult
-    } catch (error) {
-      console.error('Error parsing validation response:', error)
-      return {
-        isValid: false,
-        message: 'Error al procesar la validación de la solicitud.',
-      } // Default to not valid if parsing fails
-    }
-  }
-  return {
-    isValid: false,
-    message: 'No se recibió respuesta del servicio de validación.',
-  } // Default to not valid if no text response
-}
-
-const filePathValidateIntentPromptFile = path.join(
-  process.cwd(),
-  'src/prompts',
-  'validate-user-intent.txt',
-)
-const validateIntentPromptFromFile = fs.readFileSync(
-  filePathValidateIntentPromptFile,
-  'utf8',
-)
-
-interface ValidationResult {
-  isValid: boolean
-  message: string
-}
-
-export async function validateUserIntent(
-  userMessage: string,
-): Promise<ValidationResult> {
-  const response = await ai.models.generateContent({
-    model: MISC_MODEL, // Using a smaller model for validation
-    contents: userMessage,
-    config: {
-      systemInstruction: {
-        role: 'user',
-        parts: [{ text: validateIntentPromptFromFile }],
       },
       responseMimeType: 'application/json',
     },
@@ -136,12 +89,7 @@ export async function normalizeChat(
   }))
 }
 
-const compareSchemasPromptPath = path.join(
-  process.cwd(),
-  'src/prompts',
-  'summarize-changes.txt',
-)
-const compareSchemasPrompt = fs.readFileSync(compareSchemasPromptPath, 'utf8')
+// ...existing code...
 
 export async function compareJsonSchemas(
   oldJson: string,
@@ -157,11 +105,7 @@ export async function compareJsonSchemas(
     config: {
       systemInstruction: {
         role: 'user',
-<<<<<<< HEAD
         parts: [{ text: summarizeChangesPrompt }],
-=======
-        parts: [{ text: compareSchemasPrompt }],
->>>>>>> 17eaad8e0c053e45647e83ea73b23fd576fbb506
       },
       responseMimeType: 'text/plain',
     },
