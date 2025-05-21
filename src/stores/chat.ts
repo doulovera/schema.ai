@@ -82,7 +82,8 @@ export const useChatStore = create<ChatStore>()(
             messageText,
           )
 
-          let summaryForChatMessage = 'Received new diagram.'
+          let summaryForChatMessage =
+            'El diagrama se ha procesado y no presenta cambios respecto a la versión anterior.'
           if (
             currentDiagramInStore &&
             aiDiagramResponse &&
@@ -94,7 +95,8 @@ export const useChatStore = create<ChatStore>()(
             )
             summaryForChatMessage = comparisonResult.summary
           } else if (aiDiagramResponse && !currentDiagramInStore) {
-            summaryForChatMessage = 'He generado el diagrama. ☝️🤓'
+            summaryForChatMessage =
+              'He generado el nuevo diagrama de acuerdo a tu solicitud.'
           }
 
           addMessageToChat(
