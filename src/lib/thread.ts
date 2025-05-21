@@ -45,3 +45,12 @@ export async function getThreadsByUserId(userId: string): Promise<IThread[]> {
   const threads = await Thread.find({ user_id: userId })
   return JSON.parse(JSON.stringify(threads))
 }
+
+export async function deleteThread(chatId: string) {
+  await dbConnect()
+  const deletedThread = await Thread.findOneAndDelete({ chat_id: chatId })
+  if (!deletedThread) {
+    return null
+  }
+  return true
+}
