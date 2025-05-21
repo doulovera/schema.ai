@@ -1,28 +1,38 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import Prism from 'prismjs'
-import 'prismjs/components/prism-sql'
-import 'prismjs/components/prism-mongodb'
-import 'prismjs/themes/prism-okaidia.css'
-import 'prismjs/plugins/toolbar/prism-toolbar.js'
-import 'prismjs/plugins/toolbar/prism-toolbar.css'
-import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard.js'
+import { useState } from 'react'
 
 export function CodeBlock({
   language,
   script,
 }: { language: string; script: string }) {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: no need
-  useEffect(() => {
-    Prism.highlightAll()
-  }, [script])
+  const [isCopied, setIsCopied] = useState(false)
 
-  if (!script || !language) return null
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(script)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy text: ', err)
+    }
+  }
 
   return (
-    <pre className="whitespace-pre-wrap toolbar w-full max-h-96 !opacity-100">
-      <code className={`language-${language} !text-xs`}>{script}</code>
-    </pre>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="absolute top-2 right-6 p-2 bg-accent text-foreground rounded text-xs hover:bg-card"
+        aria-label="Copy code to clipboard"
+      >
+        {isCopied ? 'Copied!' : 'Copy'}
+      </button>
+      <pre
+        className={`language-${language} whitespace-pre-wrap overflow-auto w-full max-h-96 text-xs !opacity-100 pt-8`}
+      >
+        <code className={`language-${language}`}>{script}</code>
+      </pre>
+    </div>
   )
 }
