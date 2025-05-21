@@ -68,7 +68,6 @@ export async function validateUserIntent(
   if (text) {
     try {
       const validationResult = JSON.parse(text) as ValidationResult
-      console.log(text)
       return validationResult
     } catch (error) {
       console.error('Error parsing validation response:', error)
@@ -114,21 +113,34 @@ export async function normalizeChat(
   }))
 }
 
+const compareSchemasPromptPath = path.join(
+  process.cwd(),
+  'src/prompts',
+  'summarize-changes.txt',
+)
+const compareSchemasPrompt = fs.readFileSync(compareSchemasPromptPath, 'utf8')
+
 export async function compareJsonSchemas(
   oldJson: string,
   newJson: string,
 ): Promise<{ summary: string; newSchema?: object }> {
-  const responseSummary = await ai.models.generateContent({
+  const contents = `Esquema anterior:\n${oldJson}\n\nEsquema nuevo:\n${JSON.stringify(
+    newJson,
+  )}`
+
+  const response = await ai.models.generateContent({
     model: MISC_MODEL,
-    contents: `Compare the following two JSON schemas and provide a summary of the differences:\\n\\nOld JSON:\\n${oldJson}\\n\\nNew JSON:\\n${JSON.stringify(
-      newJson,
-    )}. The summary should be concise and highlight the key differences, including any additions, deletions, or modifications. The output should be a plain text summary of the differences. The output should be in the same language as the input JSON schemas.`,
+    contents,
     config: {
+      systemInstruction: {
+        role: 'user',
+        parts: [{ text: compareSchemasPrompt }],
+      },
       responseMimeType: 'text/plain',
     },
   })
 
-  const summary = responseSummary?.text || 'No summary text from Gemini'
+  const summary = response?.text?.trim() || 'No se recibió resumen del modelo.'
 
   return { summary, newSchema: {} }
 }
