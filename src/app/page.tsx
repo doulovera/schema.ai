@@ -42,10 +42,24 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center space-x-4">
               <SignedOut>
-                <SignInButton />
-                <SignUpButton />
+                <SignInButton>
+                  <Button variant="outline" className="border-primary/20">
+                    Iniciar sesión
+                  </Button>
+                </SignInButton>
+                <SignUpButton>
+                  <Button className="bg-gradient-to-r from-primary to-purple-500">
+                    Regístrate gratis
+                  </Button>
+                </SignUpButton>
               </SignedOut>
               <SignedIn>
+                <Link
+                  href={PATHS.SCHEMAS}
+                  className="text-sm text-muted-foreground"
+                >
+                  <p className="text-foreground">Ver mis Esquemas</p>
+                </Link>
                 <UserButton />
               </SignedIn>
             </div>
@@ -62,7 +76,7 @@ export default function LandingPage() {
                 className="rounded-2xl bg-muted/80 px-4 py-1.5 text-sm font-medium backdrop-blur-sm"
                 target="_blank"
               >
-                Follow along on GitHub
+                Ver en GitHub
               </Link>
               <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
                 Construye Bases de Datos{' '}
