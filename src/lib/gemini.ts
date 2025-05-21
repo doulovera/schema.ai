@@ -68,6 +68,7 @@ export async function validateUserIntent(
   if (text) {
     try {
       const validationResult = JSON.parse(text) as ValidationResult
+      console.log(text)
       return validationResult
     } catch (error) {
       console.error('Error parsing validation response:', error)
@@ -87,20 +88,6 @@ export async function sendUserMessage(
   currentHistory: GeminiMessage[],
   userMessage: string,
 ): Promise<{ responseText: string; updatedHistory: GeminiMessage[] }> {
-  const validateObj = await validateUserIntent(userMessage)
-  if (!validateObj.isValid) {
-    return {
-      responseText: validateObj.message,
-      updatedHistory: [
-        ...currentHistory,
-        { role: 'user', parts: [{ text: userMessage }] },
-        {
-          role: 'model',
-          parts: [{ text: validateObj.message }],
-        },
-      ],
-    }
-  }
   const chat = ai.chats.create({
     model: MAIN_MODEL,
     history: currentHistory,

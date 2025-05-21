@@ -1,16 +1,17 @@
 'use client'
 
-import type { IThread } from '@/models/Thread'
-import type { Roles, Message } from '@/types/chat'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import type { Message, Roles } from '@/types/chat'
+import type { IThread } from '@/models/Thread'
 import {
   sendUserMessage,
   normalizeChat,
   compareJsonSchemas,
   generateDatabaseScriptFromDiagram,
-} from '@/lib/gemini'
-import { updateThread, getThread, createThread } from '@/lib/thread'
+  validateUserIntent, // <<< IMPORTAR validateUserIntent
+} from '@/lib/gemini' // Asegúrate que la ruta sea correcta
+import { getThread, updateThread, createThread } from '@/lib/thread'
 import { useConfigStore } from './config'
 
 const ROLES: Record<string, Roles> = {
@@ -63,6 +64,15 @@ export const useChatStore = create<ChatStore>()(
 
         addMessageToChat(ROLES.user, messageText)
         set({ isLoading: true, chatId })
+
+        // <<< VALIDAR INTENCIÓN DEL USUARIO
+        const validationResult = await validateUserIntent(messageText)
+        if (!validationResult.isValid) {
+          addMessageToChat(ROLES.assistant, validationResult.message)
+          set({ isLoading: false })
+          return
+        }
+        // >>> FIN VALIDACIÓN
 
         const normalizedHistory = await normalizeChat(currentLocalHistory || [])
 
@@ -147,7 +157,7 @@ export const useChatStore = create<ChatStore>()(
               chatId: thread.chat_id,
               chatHistory: thread.conversation,
               chatDiagram: thread.diagram,
-              chatSchemas: thread.schemas,
+              chatSchemas: thread.schemas || { mongo: '', sql: '' }, // Ensure chatSchemas is not undefined
               isLoading: false,
             })
           } else {
@@ -155,7 +165,7 @@ export const useChatStore = create<ChatStore>()(
               chatId,
               chatHistory: [],
               chatDiagram: null,
-              chatSchemas: { mongo: '', sql: '' },
+              chatSchemas: { mongo: '', sql: '' }, // Default for new/empty thread
               isLoading: false,
             })
           }
