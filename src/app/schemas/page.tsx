@@ -8,6 +8,7 @@ import { Database, PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ThreadList } from './thread-list'
+import { ExampleButtons } from './examples'
 
 export default async function SchemasList() {
   const user = await currentUser()
@@ -58,7 +59,10 @@ export default async function SchemasList() {
         </Link>
       </div>
 
-      <ThreadList threads={mappedThreads} />
+      <div className="flex flex-col gap-44">
+        <ThreadList threads={mappedThreads} />
+        <ExampleButtons userId={user.id} />
+      </div>
     </div>
   )
 }
