@@ -21,7 +21,7 @@ import { PATHS } from '@/constants/paths'
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background px-8">
       <div className="flex flex-col container mx-auto">
         {/* Header */}
         <header className="z-40 bg-background">
@@ -36,7 +36,7 @@ export default function LandingPage() {
                   href="#features"
                   className="flex items-center text-lg font-medium transition-colors hover:text-foreground/80 text-foreground/60"
                 >
-                  Features
+                  Características
                 </Link>
               </nav>
             </div>
@@ -127,38 +127,36 @@ export default function LandingPage() {
             <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
               <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
                 <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-                  Features
+                  Características
                 </span>
               </h2>
               <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                Schema.ai provides powerful tools to streamline your database
-                design workflow
+                Schema.ai proporciona potentes herramientas para optimizar tu
+                flujo de trabajo de diseño de bases de datos
               </p>
             </div>
-            <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-2">
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+            <div className="mx-auto grid w-full gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-2">
+              <Card className="w-full relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
                 <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Sparkles className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">
-                    Generación AI-Powered
-                  </CardTitle>
+                  <CardTitle className="text-xl">Generación con IA</CardTitle>
                   <CardDescription>
                     Generación de esquemas de base de datos completos a partir
                     de descripciones en lenguaje natural
                   </CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+              <Card className="w-full relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
                 <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Database className="h-6 w-6 text-white" />
                   </div>
                   <CardTitle className="text-xl">
-                    Editor Visual de Esquema
+                    Editor Visual de Esquemas
                   </CardTitle>
                   <CardDescription>
                     Editor visual intuitivo para ajustar tu estructura de base
@@ -166,7 +164,7 @@ export default function LandingPage() {
                   </CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+              <Card className="w-full relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
                 <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
@@ -176,18 +174,18 @@ export default function LandingPage() {
                     Generación de Código
                   </CardTitle>
                   <CardDescription>
-                    ¡Exporta tu esquema a SQL, MongoDB y (en un futuro) más!
+                    ¡Exporta tu esquema a SQL, MongoDB y (próximamente) más!
                   </CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
+              <Card className="w-full relative overflow-hidden border border-primary/10 bg-gradient-to-b from-background to-background/80 p-2 backdrop-blur-sm py-5">
                 <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
                 <CardHeader>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500">
                     <Zap className="h-6 w-6 text-white" />
                   </div>
                   <CardTitle className="text-xl">
-                    Optimiza el Rendimiento
+                    Optimización de Rendimiento
                   </CardTitle>
                   <CardDescription>
                     Sugerencias de IA para índices y optimizaciones
