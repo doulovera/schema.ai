@@ -32,9 +32,9 @@ export default function CustomEdge({
             style={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              fontSize: 10,
+              fontSize: 16,
               // Evita que la etiqueta bloquee los eventos del ratón en la arista
-              pointerEvents: 'none', 
+              pointerEvents: 'none',
             }}
             className="nodrag nopan bg-background text-foreground border border-muted-foreground/50 rounded-md px-2 py-1"
           >
@@ -43,5 +43,5 @@ export default function CustomEdge({
         )}
       </EdgeLabelRenderer>
     </>
-  );
+  )
 }
