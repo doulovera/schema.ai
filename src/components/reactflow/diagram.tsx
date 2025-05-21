@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react"; // Added useRef
+import { useEffect, useState, useRef } from 'react'
 import React from "react";
 import {
   ReactFlow,
@@ -9,19 +9,20 @@ import {
   useNodesState,
   useEdgesState,
   useReactFlow,
-  type Node, // Import Node type
-  type Edge, // Import Edge type
-} from "@xyflow/react";
+  type Node,
+  type Edge,
+} from '@xyflow/react'
 import "@xyflow/react/dist/style.css";
 import CustomNode from "./custom-node";
+import CustomEdge from './custom-edge' // Importar el CustomEdge
 import { parseJsonToObject } from "@/lib/parse-utils";
 import { useChatStore } from "@/stores/chat";
 import Dagre from "@dagrejs/dagre";
 
 interface NodeData {
-  label: string;
-  columns: Array<{ name: string; type: string }>;
-  [key: string]: unknown; // Add index signature
+  label: string
+  columns: Array<{ name: string; type: string }>
+  [key: string]: unknown
 }
 
 type AppNode = Node<NodeData, string>;
@@ -31,45 +32,64 @@ const nodeTypes = {
   test: CustomNode,
 };
 
+const edgeTypes = {
+  // Definir los tipos de arista
+  custom: CustomEdge,
+}
+
 const getLayoutedElements = (
   nodesToLayout: AppNode[],
   edgesToLayout: AppEdge[],
   options: { direction: string },
 ) => {
-  const dagreGraph = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  const dagreGraph = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}))
+
   dagreGraph.setGraph({
     rankdir: options.direction,
-    nodesep: 50,
-    ranksep: 50, 
-    align: 'DL',
-  });
+    nodesep: 120,
+    ranksep: 180,
+    marginx: 20,
+    marginy: 20,
+  })
 
   for (const edge of edgesToLayout) {
-    dagreGraph.setEdge(edge.source, edge.target);
+    dagreGraph.setEdge(edge.source, edge.target)
   }
 
   for (const node of nodesToLayout) {
-    const nodeWidth = node.measured?.width && node.measured.width > 0 ? node.measured.width : 256;
-    const nodeHeight = node.measured?.height && node.measured.height > 0 ? node.measured.height : 180; // Default height if not measured
+    const nodeWidth = node.measured?.width || 260
+    const baseHeight = 100
+    const estimatedHeight = baseHeight + node.data.columns.length * 24
+    const nodeHeight = node.measured?.height || estimatedHeight
 
     dagreGraph.setNode(node.id, {
       width: nodeWidth,
       height: nodeHeight,
-    });
+    })
   }
 
-  Dagre.layout(dagreGraph);
+  Dagre.layout(dagreGraph)
+
+  const layoutedNodes = nodesToLayout.map((node) => {
+    const dagreNodeInfo = dagreGraph.node(node.id) // Contiene x, y, width, height
+    return {
+      ...node,
+      // Centrar el nodo usando sus dimensiones específicas de Dagre
+      position: {
+        x: dagreNodeInfo.x - dagreNodeInfo.width / 2,
+        y: dagreNodeInfo.y - dagreNodeInfo.height / 2,
+      },
+      positionAbsolute: undefined,
+      dragging: false,
+    }
+  })
 
   return {
-    nodes: nodesToLayout.map((node) => {
-      const dagreNode = dagreGraph.node(node.id);
-      const x = dagreNode.x - (dagreNode.width / 2);
-      const y = dagreNode.y - (dagreNode.height / 2);
-      return { ...node, position: { x, y } };
-    }),
-    edges: edgesToLayout, 
-  };
-};
+    nodes: layoutedNodes,
+    edges: edgesToLayout,
+  }
+}
+
 
 export function Diagram() {
   const [isMounted, setIsMounted] = useState(false);
@@ -83,57 +103,77 @@ export function Diagram() {
     setIsMounted(true);
   }, []);
 
-  // Effect 1: Process chatDiagram and set initial (unlayouted) nodes
   useEffect(() => {
     if (!isMounted || rawChatDiagram === null) {
-      setNodes([]);
-      setEdges([]);
-      initialLayoutPerformedRef.current = false;
-      return;
+      setNodes([])
+      setEdges([])
+      initialLayoutPerformedRef.current = false
+      return
     }
 
-    const tablesFromParser: import("@/lib/parse-utils").Table[] = parseJsonToObject(rawChatDiagram);
+    const tablesFromParser: import('@/lib/parse-utils').Table[] =
+      parseJsonToObject(rawChatDiagram)
     const newInitialNodes: AppNode[] = tablesFromParser.map((table, i) => ({
       id: table.name || `node-${i}`,
       data: {
         label: table.name,
         columns: table.columns,
       },
-      type: "test",
-      position: { x: 0, y: 0 }, // Initial position, Dagre will calculate
-    }));
+      type: 'test',
+      position: { x: 0, y: 0 },
+    }))
 
-    setNodes(newInitialNodes);
-    setEdges([]); 
-    initialLayoutPerformedRef.current = false; 
-  }, [isMounted, rawChatDiagram, setNodes, setEdges]); 
+    const newInitialEdges: AppEdge[] = []
+    for (let i = 0; i < tablesFromParser.length; i++) {
+      const table = tablesFromParser[i]
+      for (let j = 0; j < table.columns.length; j++) {
+        const column = table.columns[j]
+        if (column.foreign_key) {
+          const fkParts = column.foreign_key.split(/[()]/) // Dividir por ( o )
+          const targetTable = fkParts[0]
+          const targetColumn = fkParts[1] // La columna referenciada
+
+          const edgeLabel = `${column.name} → ${targetColumn}`
+
+          newInitialEdges.push({
+            id: `fk-${table.name}-${column.name}-${targetTable}-${targetColumn}`,
+            source: table.name,
+            target: targetTable,
+            label: edgeLabel,
+            type: 'custom', // Especificar que se use el tipo de arista custom
+          })
+        }
+      }
+    }
+
+    setNodes(newInitialNodes)
+    setEdges(newInitialEdges) // Usar los nuevos edges generados
+    initialLayoutPerformedRef.current = false
+  }, [isMounted, rawChatDiagram, setNodes, setEdges])
 
   useEffect(() => {
     if (!isMounted || nodes.length === 0 || initialLayoutPerformedRef.current) {
-      return;
+      return
     }
 
     const allNodesMeasured = nodes.every(
       (node) =>
-        node.measured?.width && // Use optional chaining
-        node.measured?.height && // Use optional chaining
+        node.measured?.width &&
+        node.measured?.height &&
         node.measured.width > 0 &&
         node.measured.height > 0,
-    );
+    )
 
     if (allNodesMeasured) {
-      const layouted = getLayoutedElements(nodes, edges, { direction: "TB" });
-      setNodes(layouted.nodes);
-      // If edges are modified by layout, uncomment setEdges and add it to dependencies
-      // setEdges(layouted.edges); 
-
-      initialLayoutPerformedRef.current = true;
+      const layouted = getLayoutedElements(nodes, edges, { direction: 'LR' })
+      setNodes(layouted.nodes)
+      initialLayoutPerformedRef.current = true
 
       requestAnimationFrame(() => {
-        fitView();
-      });
+        fitView({ padding: 0.3 })
+      })
     }
-  }, [nodes, edges, isMounted, fitView, setNodes]); // Adjusted dependencies
+  }, [nodes, edges, isMounted, fitView, setNodes])
 
   if (!isMounted) {
     return null;
@@ -146,13 +186,16 @@ export function Diagram() {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
-      style={{ width: "100%", height: "100%" }}
-      fitView // Added fitView prop for initial fit
+      edgeTypes={edgeTypes} // Pasar los tipos de arista a ReactFlow
+      style={{ width: '100%', height: '100%' }}
+      fitView
+      minZoom={0.2}
+      maxZoom={1.5}
     >
       <Background />
       <div className="text-black">
         <Controls />
       </div>
     </ReactFlow>
-  );
+  )
 }
