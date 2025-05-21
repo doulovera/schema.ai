@@ -54,3 +54,28 @@ export async function deleteThread(chatId: string) {
   }
   return true
 }
+
+export async function duplicateThread(
+  chatId: string,
+  userId: string,
+): Promise<IThread | null> {
+  await dbConnect()
+  const thread = await Thread.findOne({ chat_id: chatId })
+  if (!thread) {
+    return null
+  }
+
+  const newChatId = crypto.randomUUID()
+
+  const newThread = await Thread.create({
+    chat_id: newChatId,
+    user_id: userId,
+    diagram: thread.diagram,
+    schemas: {
+      sql: thread.schemas?.sql,
+      mongo: thread.schemas?.mongo,
+    },
+    conversation: thread.conversation,
+  })
+  return JSON.parse(JSON.stringify(newThread))
+}
