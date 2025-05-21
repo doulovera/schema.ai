@@ -14,7 +14,7 @@ import {
 } from '@xyflow/react'
 import "@xyflow/react/dist/style.css";
 import CustomNode from "./custom-node";
-import CustomEdge from './custom-edge' // Importar el CustomEdge
+import CustomEdge from './custom-edge'
 import { parseJsonToObject } from "@/lib/parse-utils";
 import { useChatStore } from "@/stores/chat";
 import Dagre from "@dagrejs/dagre";
@@ -33,7 +33,6 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-  // Definir los tipos de arista
   custom: CustomEdge,
 }
 
@@ -71,10 +70,9 @@ const getLayoutedElements = (
   Dagre.layout(dagreGraph)
 
   const layoutedNodes = nodesToLayout.map((node) => {
-    const dagreNodeInfo = dagreGraph.node(node.id) // Contiene x, y, width, height
+    const dagreNodeInfo = dagreGraph.node(node.id)
     return {
       ...node,
-      // Centrar el nodo usando sus dimensiones específicas de Dagre
       position: {
         x: dagreNodeInfo.x - dagreNodeInfo.width / 2,
         y: dagreNodeInfo.y - dagreNodeInfo.height / 2,
@@ -90,13 +88,12 @@ const getLayoutedElements = (
   }
 }
 
-
 export function Diagram() {
   const [isMounted, setIsMounted] = useState(false);
   const rawChatDiagram = useChatStore(isMounted ? (state) => state.chatDiagram : () => null);
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>([]);
-  const { fitView } = useReactFlow();
+  const { setViewport } = useReactFlow()
   const initialLayoutPerformedRef = useRef(false);
 
   useEffect(() => {
@@ -113,6 +110,7 @@ export function Diagram() {
 
     const tablesFromParser: import('@/lib/parse-utils').Table[] =
       parseJsonToObject(rawChatDiagram)
+
     const newInitialNodes: AppNode[] = tablesFromParser.map((table, i) => ({
       id: table.name || `node-${i}`,
       data: {
@@ -124,15 +122,12 @@ export function Diagram() {
     }))
 
     const newInitialEdges: AppEdge[] = []
-    for (let i = 0; i < tablesFromParser.length; i++) {
-      const table = tablesFromParser[i]
-      for (let j = 0; j < table.columns.length; j++) {
-        const column = table.columns[j]
+    for (const table of tablesFromParser) {
+      for (const column of table.columns) {
         if (column.foreign_key) {
-          const fkParts = column.foreign_key.split(/[()]/) // Dividir por ( o )
+          const fkParts = column.foreign_key.split(/[()]/)
           const targetTable = fkParts[0]
-          const targetColumn = fkParts[1] // La columna referenciada
-
+          const targetColumn = fkParts[1]
           const edgeLabel = `${column.name} → ${targetColumn}`
 
           newInitialEdges.push({
@@ -140,14 +135,14 @@ export function Diagram() {
             source: table.name,
             target: targetTable,
             label: edgeLabel,
-            type: 'custom', // Especificar que se use el tipo de arista custom
+            type: 'custom',
           })
         }
       }
     }
 
     setNodes(newInitialNodes)
-    setEdges(newInitialEdges) // Usar los nuevos edges generados
+    setEdges(newInitialEdges)
     initialLayoutPerformedRef.current = false
   }, [isMounted, rawChatDiagram, setNodes, setEdges])
 
@@ -170,10 +165,37 @@ export function Diagram() {
       initialLayoutPerformedRef.current = true
 
       requestAnimationFrame(() => {
-        fitView({ padding: 0.3 })
+        // 1. Calcular bounding box de los nodos
+        const positions = layouted.nodes.map((node) => ({
+          x: node.position.x,
+          y: node.position.y,
+          width: node.measured?.width || 260,
+          height: node.measured?.height || 100 + node.data.columns.length * 24,
+        }))
+
+        const minX = Math.min(...positions.map((p) => p.x))
+        const minY = Math.min(...positions.map((p) => p.y))
+        const maxX = Math.max(...positions.map((p) => p.x + p.width))
+        const maxY = Math.max(...positions.map((p) => p.y + p.height))
+
+        const boxWidth = maxX - minX
+        const boxHeight = maxY - minY
+
+        // 2. Calcular el centro del bounding box
+        const centerX = minX + boxWidth / 2
+        const centerY = minY + boxHeight / 2
+
+        // 3. Centrar el viewport usando ese centro y aplicar zoom personalizado
+        const zoom = 1 // Ajusta si deseas más alejado o cercano
+        setViewport({
+          x: window.innerWidth / 2 - centerX * zoom,
+          y: window.innerHeight / 2 - centerY * zoom,
+          zoom,
+        })
       })
     }
-  }, [nodes, edges, isMounted, fitView, setNodes])
+  }, [nodes, edges, isMounted, setNodes, setViewport])
+
 
   if (!isMounted) {
     return null;
@@ -186,10 +208,9 @@ export function Diagram() {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes} // Pasar los tipos de arista a ReactFlow
+      edgeTypes={edgeTypes}
       style={{ width: '100%', height: '100%' }}
-      fitView
-      minZoom={0.2}
+      minZoom={0.1}
       maxZoom={1.5}
     >
       <Background />
