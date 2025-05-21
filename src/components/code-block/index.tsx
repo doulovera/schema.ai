@@ -29,7 +29,7 @@ export function CodeBlock({
         {isCopied ? 'Copied!' : 'Copy'}
       </button>
       <pre
-        className={`language-${language} whitespace-pre-wrap overflow-auto w-full max-h-96 text-xs !opacity-100 pt-8`}
+        className={`language-${language} whitespace-pre-wrap overflow-auto w-full max-h-96 text-xs !opacity-100 pt-8 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent scrollbar-thumb-rounded pr-2`}
       >
         <code className={`language-${language}`}>{script}</code>
       </pre>
