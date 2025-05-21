@@ -11,7 +11,7 @@ export default function SchemaPanel({ hidePanel }: { hidePanel: () => void }) {
   return (
     <div className="relative flex flex-col h-full border-t border-border bg-card text-foreground">
       {isLoading && (
-        <div className="absolute z-100 flex items-center justify-center h-full w-full bg-black opacity-50" />
+        <div className="absolute z-100 flex items-center justify-center h-full w-full bg-background opacity-50" />
       )}
       <div className="p-4 border-b border-border flex justify-between items-center">
         <h2 className="text-lg font-medium">Schemas</h2>

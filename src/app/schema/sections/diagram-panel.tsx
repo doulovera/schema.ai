@@ -74,7 +74,7 @@ export default function DiagramPanel({
       </div>
       <div className="relative flex-1 overflow-auto p-4 flex items-center justify-center">
         {isLoading && (
-          <div className="absolute z-100 flex items-center justify-center h-full w-full bg-black opacity-50" />
+          <div className="absolute z-100 flex items-center justify-center h-full w-full bg-background opacity-50" />
         )}
         <ReactFlowProvider>
           <Diagram />
