@@ -15,6 +15,7 @@
 
 - [Vista previa](#🖼️-vista-previa)
 - [Características principales](#✨-características-principales)
+- [Uso de Clerk](#🔐-uso-de-clerk)
 - [Cómo comenzar](#🚀-cómo-comenzar)
 - [Tecnologías utilizadas](#🛠️-tecnologías-utilizadas)
 
@@ -30,6 +31,16 @@
     - **MongoDB**: Genera scripts en shell para bases de datos no relacionales.
 - **Interfaz moderna y responsiva**: Desarrollada con Next.js y TypeScript, ofreciendo una experiencia de usuario fluida y adaptable a diferentes dispositivos.
 - **Código abierto**: Disponible para la comunidad en GitHub, fomentando la colaboración y mejora continua.
+
+## 🔐 Uso de Clerk
+
+Clerk se ha integrado para gestionar el sistema de autenticación de usuarios en [schema.ai](https://schema-ai-wine.vercel.app). Gracias a Clerk:
+
+- Se implementó el registro e inicio de sesión con proveedores OAuth (como Google y GitHub).
+- Se protegieron rutas de la aplicación para asegurar que solo los usuarios autenticados puedan generar scripts.
+- Se añadió gestión de sesión persistente para mejorar la experiencia del usuario.
+
+La integración se realizó mediante el SDK oficial de Clerk para Next.js, asegurando una implementación fluida y segura.
 
 ## 🚀 Cómo comenzar
 
