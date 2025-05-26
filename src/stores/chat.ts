@@ -9,7 +9,8 @@ import {
   normalizeChat,
   compareJsonSchemas,
   generateDatabaseScriptFromDiagram,
-  validateUserIntent, // <<< IMPORTAR validateUserIntent
+  validateUserIntent,
+  getRandomWelcomeMessage,
 } from '@/lib/gemini' // Asegúrate que la ruta sea correcta
 import { getThread, updateThread, createThread } from '@/lib/thread'
 import { useConfigStore } from './config'
@@ -152,22 +153,31 @@ export const useChatStore = create<ChatStore>()(
       },
 
       loadChatThread: async (chatId: string, thread: IThread | null) => {
-        set({ isLoading: true })
+        set({ isLoading: true, chatId, chatHistory: [] }) // No mostrar nada hasta tener el mensaje real
         try {
           if (thread) {
             set({
               chatId: thread.chat_id,
               chatHistory: thread.conversation,
               chatDiagram: thread.diagram,
-              chatSchemas: thread.schemas || { mongo: '', sql: '' }, // Ensure chatSchemas is not undefined
+              chatSchemas: thread.schemas || { mongo: '', sql: '' },
               isLoading: false,
             })
           } else {
+            const welcome = await getRandomWelcomeMessage()
             set({
               chatId,
-              chatHistory: [],
+              chatHistory: [
+                {
+                  id: Date.now().toString(),
+                  role: ROLES.assistant,
+                  message: welcome,
+                  diagram: '',
+                  timestamp: Date.now(),
+                },
+              ],
               chatDiagram: null,
-              chatSchemas: { mongo: '', sql: '' }, // Default for new/empty thread
+              chatSchemas: { mongo: '', sql: '' },
               isLoading: false,
             })
           }

@@ -285,3 +285,17 @@ Respuesta:
 "message": "Hola. Para poder ayudarte, cuéntame qué tipo de información quieres guardar o gestionar con tu base de datos."
 }
 `
+
+export const welcomePrompt = `
+Actúa como un diseñador de conversación experto en UX y diseño de prompts. Genera un array de entre 3 y 5 mensajes breves de bienvenida para un chatbot que ayuda a diseñar bases de datos relacionales y no relacionales a partir de lenguaje natural.
+
+Requisitos:
+- Los mensajes deben estar escritos en español.
+- Deben ser cortos (máximo 2 líneas cada uno).
+- Deben sonar naturales, amables y orientados a invitar al usuario a describir la información que quiere almacenar.
+- El resultado debe ser un array de strings, sin explicaciones ni texto adicional.
+
+Ejemplo de tono: ["¿Qué vamos a diseñar hoy?", "Describe los datos que quieres guardar y te ayudo."]
+
+Devuelve solo el array.
+`

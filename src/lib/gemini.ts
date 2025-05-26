@@ -9,6 +9,7 @@ import {
   fromJsonToSqlPrompt,
   summarizeChangesPrompt,
   validateUserIntentPrompt,
+  welcomePrompt,
 } from '@/lib/prompts'
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
@@ -63,9 +64,13 @@ export async function sendUserMessage(
   currentHistory: GeminiMessage[],
   userMessage: string,
 ): Promise<{ responseText: string; updatedHistory: GeminiMessage[] }> {
+  let history = currentHistory || []
+  if (history.length === 0 || history[0].role !== 'user') {
+    history = [{ role: 'user', parts: [{ text: userMessage }] }, ...history]
+  }
   const chat = ai.chats.create({
     model: MAIN_MODEL,
-    history: currentHistory,
+    history,
     config: {
       responseMimeType: 'application/json',
       systemInstruction: {
@@ -88,8 +93,6 @@ export async function normalizeChat(
     parts: [{ text: thread.diagram }],
   }))
 }
-
-// ...existing code...
 
 export async function compareJsonSchemas(
   oldJson: string,
@@ -169,4 +172,40 @@ export async function generateDatabaseScriptFromDiagram(
     console.error('Error generating database script:', error)
     return 'Error generating database script'
   }
+}
+
+export async function getRandomWelcomeMessage(): Promise<string> {
+  const response = await ai.models.generateContent({
+    model: MISC_MODEL,
+    contents: welcomePrompt,
+    config: {
+      systemInstruction: {
+        role: 'user',
+        parts: [{ text: welcomePrompt }],
+      },
+      responseMimeType: 'application/json',
+    },
+  })
+  let messages: string[] = []
+  try {
+    messages = JSON.parse(response?.text || '[]')
+  } catch {
+    // fallback: intentar extraer el array de texto plano
+    const match = response?.text?.match(/\[(.*)\]/s)
+    if (match) {
+      try {
+        messages = JSON.parse(`[${match[1]}]`)
+      } catch {}
+    }
+  }
+  if (!Array.isArray(messages) || messages.length === 0) {
+    messages = [
+      '¿Qué vamos a diseñar hoy?',
+      'Describe los datos que quieres guardar y te ayudo.',
+      '¡Hola! Cuéntame qué información quieres almacenar.',
+      'Estoy listo para ayudarte a crear tu base de datos.',
+      '¿Qué tipo de datos necesitas organizar?',
+    ]
+  }
+  return messages[Math.floor(Math.random() * messages.length)]
 }
