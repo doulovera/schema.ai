@@ -32,16 +32,33 @@ export async function getThread(
   chatId: string,
 ): Promise<(IThread & { conversation?: Array<Message> }) | null> {
   await dbConnect()
-  const foundThread = await Thread.findOne({ chat_id: chatId })
+
+  // Obtiene el hilo principal de la base de datos.
+  const foundThread = await Thread.findOne({ chat_id: chatId }).lean<IThread>()
+
   if (!foundThread) {
     return null
   }
-  const conversation = await Conversation.findOne({ thread_id: chatId })
-  const threadObj = JSON.parse(JSON.stringify(foundThread))
-  if (conversation) {
-    threadObj.conversation = conversation.messages
+
+  // Obtiene la conversación asociada al hilo.
+  const conversationDoc = await Conversation.findOne({
+    thread_id: chatId,
+  }).lean<IConversation>()
+
+  // Convierte foundThread en un objeto plano para que coincida con IThread.
+  const threadObj: IThread & { conversation?: Array<Message> } = JSON.parse(
+    JSON.stringify(foundThread),
+  )
+
+  if (conversationDoc?.messages) {
+    threadObj.conversation = conversationDoc.messages
+  } else {
+    // Asegura que la conversación sea un array vacío si no existe.
+    threadObj.conversation = []
   }
-  return threadObj
+
+  // Serializa el objeto para asegurar la compatibilidad con Client Components.
+  return JSON.parse(JSON.stringify(threadObj))
 }
 
 export async function updateThread(

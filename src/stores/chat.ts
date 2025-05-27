@@ -152,8 +152,29 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
+      // ✅ REEMPLAZAR loadChatThread con esta versión optimizada:
       loadChatThread: async (chatId: string, thread: IThread | null) => {
-        set({ isLoading: true, chatId, chatHistory: [] }) // No mostrar nada hasta tener el mensaje real
+        const currentState = get()
+
+        // ✅ Prevenir llamadas duplicadas
+        if (currentState.isLoading && currentState.chatId === chatId) {
+          console.log('🚫 LoadChatThread already in progress for:', chatId)
+          return
+        }
+
+        // ✅ Si ya tenemos este chat cargado, no recargar
+        if (
+          currentState.chatId === chatId &&
+          Array.isArray(currentState.chatHistory) &&
+          currentState.chatHistory.length > 0
+        ) {
+          console.log('✅ Chat already loaded:', chatId)
+          return
+        }
+
+        console.log('🔄 Loading chat thread:', chatId)
+        set({ isLoading: true, chatId })
+
         try {
           if (thread) {
             set({
