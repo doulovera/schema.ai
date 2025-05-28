@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, memo, useCallback } from 'react'
+import { useState, useMemo, memo, useCallback, useEffect } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import {
   oneDark,
@@ -21,6 +21,15 @@ export const CodeBlock = memo(function CodeBlock({
   const [isCopied, setIsCopied] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const { isDarkMode } = useConfigStore()
+
+  // ✅ Eliminar el delay - cargar syntax highlighter inmediatamente para evitar parpadeo
+  // const [isHighlighterReady, setIsHighlighterReady] = useState(false)
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setIsHighlighterReady(true)
+  //   }, 50)
+  //   return () => clearTimeout(timer)
+  // }, [])
 
   // Memoizar la función de copia para evitar re-creaciones
   const handleCopy = useCallback(async () => {
@@ -182,6 +191,7 @@ export const CodeBlock = memo(function CodeBlock({
         </button>
       </div>
 
+      {/* ✅ Syntax highlighter sin delay para evitar parpadeo */}
       <SyntaxHighlighter {...syntaxHighlighterProps}>
         {script}
       </SyntaxHighlighter>

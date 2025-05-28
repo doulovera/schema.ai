@@ -1,6 +1,13 @@
 'use client'
 
-import { useMemo, useCallback, memo } from 'react'
+import {
+  useMemo,
+  useCallback,
+  memo,
+  useState,
+  useEffect,
+  Suspense,
+} from 'react'
 import type { IThread } from '@/models/Thread'
 import { useChatStore } from '@/stores/chat'
 import { Button } from '@/components/ui/button'
@@ -13,6 +20,15 @@ interface SchemaPanelProps {
   onVisibilityChange: (visible: boolean) => void
 }
 
+// ✅ Componente de carga ligero
+const SchemaViewFallback = () => (
+  <div className="h-full flex items-center justify-center">
+    <div className="animate-pulse text-muted-foreground">
+      Cargando schemas...
+    </div>
+  </div>
+)
+
 // ✅ Memoizar el componente para evitar re-renders innecesarios
 const SchemaPanel = memo(function SchemaPanel({
   thread,
@@ -20,6 +36,14 @@ const SchemaPanel = memo(function SchemaPanel({
   onVisibilityChange,
 }: SchemaPanelProps) {
   const { isLoading, chatSchemas } = useChatStore()
+  const [hasBeenVisible, setHasBeenVisible] = useState(false)
+
+  // ✅ Marcar que el panel ha sido visible al menos una vez
+  useEffect(() => {
+    if (isVisible && !hasBeenVisible) {
+      setHasBeenVisible(true)
+    }
+  }, [isVisible, hasBeenVisible])
 
   // ✅ Memoización más eficiente con dependencias específicas
   const shouldAutoShow = useMemo(() => {
@@ -40,8 +64,7 @@ const SchemaPanel = memo(function SchemaPanel({
     onVisibilityChange(false)
   }, [onVisibilityChange])
 
-  // ✅ Solo renderizar contenido si el panel es visible - con transición suave
-  if (!isVisible) {
+  // ✅ No renderizar nada si nunca ha sido visible
     return null
   }
 
@@ -49,6 +72,7 @@ const SchemaPanel = memo(function SchemaPanel({
     <div
       className="relative flex flex-col h-full border-t border-border bg-card text-foreground"
       style={{
+        display: isVisible ? 'flex' : 'none', // ✅ Ocultar con CSS si ya ha sido renderizado
         transition: 'none', // ✅ Evitar transiciones que puedan causar parpadeo
         willChange: 'auto', // ✅ Optimizar para animaciones
       }}
@@ -68,7 +92,15 @@ const SchemaPanel = memo(function SchemaPanel({
         </Button>
       </div>
       <div className="relative flex flex-col p-4">
-        <SchemaView schemas={chatSchemas} />
+        {/* ✅ Solo renderizar SchemaView cuando es visible con Suspense */}
+        {isVisible ? (
+          <Suspense fallback={<SchemaViewFallback />}>
+            <SchemaView schemas={chatSchemas} />
+          </Suspense>
+        ) : (
+          // ✅ Placeholder ligero para mantener el DOM pero sin contenido pesado
+          <div className="h-full" />
+        )}
       </div>
     </div>
   )
