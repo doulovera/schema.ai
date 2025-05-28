@@ -2,7 +2,7 @@
 
 import type { IThread } from '@/models/Thread'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 
 import { ChevronUp } from 'lucide-react'
@@ -15,17 +15,12 @@ import { Button } from '@/components/ui/button'
 
 import Chat from '../sections/chat-panel'
 import DiagramPanel from '../sections/diagram-panel'
-import SchemaPanel from '../sections/schema-panel'
+import SchemaPanel, { useSchemaPanelVisibility } from '../sections/schema-panel'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useUser } from '@clerk/nextjs'
 
 export default function PageContent({ thread }: { thread: IThread | null }) {
-  const [panels, setPanels] = useState<{ [panel: string]: boolean }>({
-    chat: true,
-    schema: true,
-  })
-
   const { loadChatThread, chatId: storeChatId } = useChatStore()
   const params = useParams()
   const urlChatId = params.id as string
@@ -33,6 +28,28 @@ export default function PageContent({ thread }: { thread: IThread | null }) {
   const { user } = useUser()
   const userId = user?.id
   const { setUserId } = useConfigStore()
+
+  // Usar el hook del panel de esquemas para la lógica de auto-mostrar
+  const { shouldAutoShow: shouldShowSchemaPanel } =
+    useSchemaPanelVisibility(thread)
+
+  // Estado para paneles que pueden ser toggled manualmente
+  const [manualPanelOverrides, setManualPanelOverrides] = useState<{
+    [panel: string]: boolean | undefined
+  }>({})
+
+  // Estado derivado: combina lógica automática con overrides manuales
+  const panels = useMemo(
+    () => ({
+      chat: manualPanelOverrides.chat ?? true,
+      schema: manualPanelOverrides.schema ?? shouldShowSchemaPanel,
+    }),
+    [
+      manualPanelOverrides.chat,
+      manualPanelOverrides.schema,
+      shouldShowSchemaPanel,
+    ],
+  )
 
   useEffect(() => {
     if (userId) setUserId(userId)
@@ -50,34 +67,56 @@ export default function PageContent({ thread }: { thread: IThread | null }) {
     }
   }, [urlChatId, loadChatThread, storeChatId])
 
-  const togglePanel = (panel: string) => {
-    setPanels((prev) => ({
+  const togglePanel = useCallback(
+    (panel: keyof typeof panels) => {
+      setManualPanelOverrides((prev) => ({
+        ...prev,
+        [panel]: !panels[panel],
+      }))
+    },
+    [panels],
+  )
+
+  const toggleChatPanel = useCallback((show: boolean) => {
+    setManualPanelOverrides((prev) => ({ ...prev, chat: show }))
+  }, [])
+
+  const hideChatPanel = useCallback(() => {
+    togglePanel('chat')
+  }, [togglePanel])
+
+  const onSchemaVisibilityChange = useCallback((visible: boolean) => {
+    setManualPanelOverrides((prev) => ({
       ...prev,
-      [panel]: !prev[panel],
+      schema: visible,
     }))
-  }
+  }, [])
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal">
+        <ResizablePanelGroup
+          direction="horizontal"
+          style={{ transition: 'none' }} // ✅ Deshabilitar transiciones para evitar parpadeo
+        >
           {panels.chat && (
             <>
               <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
-                <Chat hidePanel={() => togglePanel('chat')} />
+                <Chat hidePanel={hideChatPanel} />
               </ResizablePanel>
               <ResizableHandle withHandle />
             </>
           )}
 
           <ResizablePanel defaultSize={70}>
-            <ResizablePanelGroup direction="vertical">
+            <ResizablePanelGroup
+              direction="vertical"
+              style={{ transition: 'none' }} // ✅ Deshabilitar transiciones para evitar parpadeo
+            >
               <ResizablePanel defaultSize={70} minSize={30}>
                 <DiagramPanel
                   chatPanelIsShown={panels.chat}
-                  toggleChatPanel={(show) =>
-                    setPanels((prev) => ({ ...prev, chat: show }))
-                  }
+                  toggleChatPanel={toggleChatPanel}
                 />
               </ResizablePanel>
 
@@ -85,7 +124,11 @@ export default function PageContent({ thread }: { thread: IThread | null }) {
                 <>
                   <ResizableHandle withHandle />
                   <ResizablePanel defaultSize={30} minSize={20}>
-                    <SchemaPanel hidePanel={() => togglePanel('schema')} />
+                    <SchemaPanel
+                      thread={thread}
+                      isVisible={panels.schema}
+                      onVisibilityChange={onSchemaVisibilityChange}
+                    />
                   </ResizablePanel>
                 </>
               )}

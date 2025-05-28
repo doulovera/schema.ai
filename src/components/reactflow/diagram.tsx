@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react'
-import React from "react";
+import { useEffect, useState, useRef, useMemo, memo } from 'react'
+import React from 'react'
 import {
   ReactFlow,
   Background,
@@ -12,12 +12,12 @@ import {
   type Node,
   type Edge,
 } from '@xyflow/react'
-import "@xyflow/react/dist/style.css";
-import CustomNode from "./custom-node";
+import '@xyflow/react/dist/style.css'
+import CustomNode from './custom-node'
 import CustomEdge from './custom-edge'
-import { parseJsonToObject } from "@/lib/parse-utils";
-import { useChatStore } from "@/stores/chat";
-import Dagre from "@dagrejs/dagre";
+import { parseJsonToObject } from '@/lib/parse-utils'
+import { useChatStore } from '@/stores/chat'
+import Dagre from '@dagrejs/dagre'
 
 interface NodeData {
   label: string
@@ -25,12 +25,12 @@ interface NodeData {
   [key: string]: unknown
 }
 
-type AppNode = Node<NodeData, string>;
-type AppEdge = Edge;
+type AppNode = Node<NodeData, string>
+type AppEdge = Edge
 
 const nodeTypes = {
   test: CustomNode,
-};
+}
 
 const edgeTypes = {
   custom: CustomEdge,
@@ -88,24 +88,27 @@ const getLayoutedElements = (
   }
 }
 
-export function Diagram() {
-  const [isMounted, setIsMounted] = useState(false);
-  const rawChatDiagram = useChatStore(isMounted ? (state) => state.chatDiagram : () => null);
-  const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>([]);
+export const Diagram = memo(function Diagram() {
+  const [isMounted, setIsMounted] = useState(false)
+  const rawChatDiagram = useChatStore(
+    isMounted ? (state) => state.chatDiagram : () => null,
+  )
+  const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<AppEdge>([])
   const { setViewport } = useReactFlow()
-  const initialLayoutPerformedRef = useRef(false);
+  const initialLayoutPerformedRef = useRef(false)
+  const lastViewportRef = useRef<{ x: number; y: number; zoom: number } | null>(
+    null,
+  )
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    setIsMounted(true)
+  }, [])
 
-  useEffect(() => {
+  // ✅ Memoizar el parseo de datos para evitar recálculos
+  const parsedData = useMemo(() => {
     if (!isMounted || rawChatDiagram === null) {
-      setNodes([])
-      setEdges([])
-      initialLayoutPerformedRef.current = false
-      return
+      return { nodes: [], edges: [] }
     }
 
     const tablesFromParser: import('@/lib/parse-utils').Table[] =
@@ -141,10 +144,14 @@ export function Diagram() {
       }
     }
 
-    setNodes(newInitialNodes)
-    setEdges(newInitialEdges)
+    return { nodes: newInitialNodes, edges: newInitialEdges }
+  }, [isMounted, rawChatDiagram])
+
+  useEffect(() => {
+    setNodes(parsedData.nodes)
+    setEdges(parsedData.edges)
     initialLayoutPerformedRef.current = false
-  }, [isMounted, rawChatDiagram, setNodes, setEdges])
+  }, [parsedData, setNodes, setEdges])
 
   useEffect(() => {
     if (!isMounted || nodes.length === 0 || initialLayoutPerformedRef.current) {
@@ -164,7 +171,13 @@ export function Diagram() {
       setNodes(layouted.nodes)
       initialLayoutPerformedRef.current = true
 
+      // ✅ Evitar recálculos innecesarios del viewport
       requestAnimationFrame(() => {
+        // Solo calcular viewport si no lo hemos hecho antes o si los datos han cambiado significativamente
+        if (lastViewportRef.current && layouted.nodes.length === nodes.length) {
+          return
+        }
+
         // 1. Calcular bounding box de los nodos
         const positions = layouted.nodes.map((node) => ({
           x: node.position.x,
@@ -172,6 +185,8 @@ export function Diagram() {
           width: node.measured?.width || 260,
           height: node.measured?.height || 100 + node.data.columns.length * 24,
         }))
+
+        if (positions.length === 0) return
 
         const minX = Math.min(...positions.map((p) => p.x))
         const minY = Math.min(...positions.map((p) => p.y))
@@ -187,36 +202,78 @@ export function Diagram() {
 
         // 3. Centrar el viewport usando ese centro y aplicar zoom personalizado
         const zoom = 1 // Ajusta si deseas más alejado o cercano
-        setViewport({
+        const newViewport = {
           x: window.innerWidth / 2 - centerX * zoom,
           y: window.innerHeight / 2 - centerY * zoom,
           zoom,
-        })
+        }
+
+        // ✅ Solo actualizar si ha cambiado significativamente
+        if (
+          !lastViewportRef.current ||
+          Math.abs(lastViewportRef.current.x - newViewport.x) > 10 ||
+          Math.abs(lastViewportRef.current.y - newViewport.y) > 10
+        ) {
+          setViewport(newViewport)
+          lastViewportRef.current = newViewport
+        }
       })
     }
   }, [nodes, edges, isMounted, setNodes, setViewport])
 
+  // ✅ Memoizar el estilo de ReactFlow para evitar recreación
+  const reactFlowStyle = useMemo(
+    () => ({
+      width: '100%',
+      height: '100%',
+      // ✅ Asegurar que el ReactFlow maneje correctamente el scroll
+      position: 'absolute' as const,
+      top: 0,
+      left: 0,
+    }),
+    [],
+  )
+
+  // ✅ Memoizar props de ReactFlow para evitar re-renders
+  const reactFlowProps = useMemo(
+    () => ({
+      nodes,
+      edges,
+      onNodesChange,
+      onEdgesChange,
+      nodeTypes,
+      edgeTypes,
+      style: reactFlowStyle,
+      minZoom: 0.1,
+      maxZoom: 1.5,
+      // ✅ Configuraciones optimizadas que mantienen la funcionalidad de scroll
+      fitView: false,
+      preventScrolling: false, // ✅ Permitir scroll
+      zoomOnScroll: true, // ✅ Permitir zoom con scroll
+      panOnScroll: true, // ✅ Permitir pan con scroll (shift+scroll)
+      panOnDrag: true, // ✅ Permitir arrastrar para hacer pan
+      zoomOnPinch: true, // ✅ Permitir zoom con pinch en dispositivos táctiles
+      panOnScrollSpeed: 0.5, // ✅ Velocidad de pan con scroll
+      zoomOnScrollSpeed: 0.5, // ✅ Velocidad de zoom con scroll
+      selectNodesOnDrag: false,
+      // ✅ Viewport inicial solo si no tenemos uno guardado
+      ...(lastViewportRef.current
+        ? { defaultViewport: lastViewportRef.current }
+        : {}),
+    }),
+    [nodes, edges, onNodesChange, onEdgesChange, reactFlowStyle],
+  )
 
   if (!isMounted) {
-    return null;
+    return null
   }
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      style={{ width: '100%', height: '100%' }}
-      minZoom={0.1}
-      maxZoom={1.5}
-    >
+    <ReactFlow {...reactFlowProps}>
       <Background />
       <div className="text-black">
         <Controls />
       </div>
     </ReactFlow>
   )
-}
+})

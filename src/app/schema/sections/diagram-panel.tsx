@@ -2,20 +2,22 @@ import { ChevronRight, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Diagram } from '@/components/reactflow/diagram'
 import { SignedIn, UserButton } from '@clerk/nextjs'
-import { useEffect } from 'react'
+import { useEffect, memo, useCallback } from 'react'
 import { ReactFlowProvider } from '@xyflow/react'
 import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { PATHS } from '@/constants/paths'
 import Link from 'next/link'
 
-export default function DiagramPanel({
-  chatPanelIsShown,
-  toggleChatPanel,
-}: {
+interface DiagramPanelProps {
   chatPanelIsShown: boolean
   toggleChatPanel: (show: boolean) => void
-}) {
+}
+
+const DiagramPanel = memo(function DiagramPanel({
+  chatPanelIsShown,
+  toggleChatPanel,
+}: DiagramPanelProps) {
   const { isDarkMode, setDarkMode } = useConfigStore()
   const { isLoading } = useChatStore()
 
@@ -27,9 +29,13 @@ export default function DiagramPanel({
     }
   }, [isDarkMode])
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setDarkMode(!isDarkMode)
-  }
+  }, [isDarkMode, setDarkMode])
+
+  const showChatPanel = useCallback(() => {
+    toggleChatPanel(true)
+  }, [toggleChatPanel])
 
   return (
     <div className="flex flex-col h-full">
@@ -39,7 +45,7 @@ export default function DiagramPanel({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => toggleChatPanel(true)}
+              onClick={showChatPanel}
               aria-label="Mostrar Espacio 1"
               className="bg-card text-foreground"
             >
@@ -72,14 +78,16 @@ export default function DiagramPanel({
           </Button>
         </div>
       </div>
-      <div className="relative flex-1 overflow-auto p-4 flex items-center justify-center">
+      <div className="relative flex-1 overflow-hidden">
         {isLoading && (
-          <div className="absolute z-100 flex items-center justify-center h-full w-full bg-background opacity-50" />
+          <div className="absolute z-10 flex items-center justify-center h-full w-full bg-background opacity-50" />
         )}
-        <ReactFlowProvider>
+        <ReactFlowProvider key="diagram-provider">
           <Diagram />
         </ReactFlowProvider>
       </div>
     </div>
   )
-}
+})
+
+export default DiagramPanel

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Card } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CodeBlock } from '../code-block'
 
 export function SchemaView({
@@ -11,20 +11,22 @@ export function SchemaView({
   const [activeTab, setActiveTab] = useState('sql')
 
   return (
-    <div className="space-y-4 h-full">
+    <div className="space-y-4 h-full pr-2">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="sql">SQL</TabsTrigger>
           <TabsTrigger value="mongo">MongoDB</TabsTrigger>
         </TabsList>
 
-        {Object.entries(schemas).map(([key, schema]) => (
-          <TabsContent key={key} value={key} className="mt-0 h-full">
-            <Card className="p-4 h-full border-none shadow-none">
-              <CodeBlock language={key} script={schema} />
-            </Card>
-          </TabsContent>
-        ))}
+        <Card className="py-4 h-full border-none shadow-none relative">
+          {/* Renderizar ambos CodeBlocks, pero mostrar solo el activo */}
+          <div className={activeTab === 'sql' ? 'block' : 'hidden'}>
+            <CodeBlock language="sql" script={schemas.sql || ''} />
+          </div>
+          <div className={activeTab === 'mongo' ? 'block' : 'hidden'}>
+            <CodeBlock language="mongo" script={schemas.mongo || ''} />
+          </div>
+        </Card>
       </Tabs>
     </div>
   )
