@@ -8,7 +8,7 @@ export function ConversationView() {
   const { chatHistory, isLoading } = useChatStore();
   
   return (
-    <div className="h-full space-y-4 overflow-y-auto scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent scrollbar-thumb-rounded pr-2">
+    <div className="space-y-4 pr-2">
       {chatHistory?.map((message) => (
         <Card
           key={message.id}
