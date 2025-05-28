@@ -246,17 +246,13 @@ export const Diagram = memo(function Diagram() {
       style: reactFlowStyle,
       minZoom: 0.1,
       maxZoom: 1.5,
-      // ✅ Configuraciones optimizadas que mantienen la funcionalidad de scroll
       fitView: false,
       preventScrolling: false, // ✅ Permitir scroll
       zoomOnScroll: true, // ✅ Permitir zoom con scroll
       panOnScroll: true, // ✅ Permitir pan con scroll (shift+scroll)
       panOnDrag: true, // ✅ Permitir arrastrar para hacer pan
       zoomOnPinch: true, // ✅ Permitir zoom con pinch en dispositivos táctiles
-      panOnScrollSpeed: 0.5, // ✅ Velocidad de pan con scroll
-      zoomOnScrollSpeed: 0.5, // ✅ Velocidad de zoom con scroll
       selectNodesOnDrag: false,
-      // ✅ Viewport inicial solo si no tenemos uno guardado
       ...(lastViewportRef.current
         ? { defaultViewport: lastViewportRef.current }
         : {}),

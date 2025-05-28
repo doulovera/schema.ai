@@ -9,6 +9,7 @@ import {
   Suspense,
 } from 'react'
 import type { IThread } from '@/models/Thread'
+import type { ThreadWithConversation } from '@/types/thread'
 import { useChatStore } from '@/stores/chat'
 import { Button } from '@/components/ui/button'
 import { ChevronDown } from 'lucide-react'
@@ -64,7 +65,7 @@ const SchemaPanel = memo(function SchemaPanel({
     onVisibilityChange(false)
   }, [onVisibilityChange])
 
-  // ✅ No renderizar nada si nunca ha sido visible
+  if (!hasBeenVisible) {
     return null
   }
 
@@ -109,7 +110,7 @@ const SchemaPanel = memo(function SchemaPanel({
 export default SchemaPanel
 
 // Hook personalizado para usar la lógica de visibilidad del panel de esquemas
-export function useSchemaPanelVisibility(thread: IThread | null) {
+export function useSchemaPanelVisibility(thread: ThreadWithConversation | null) {
   const { chatSchemas } = useChatStore()
 
   const shouldAutoShow = useMemo(() => {

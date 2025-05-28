@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Message, Roles } from '@/types/chat'
 import type { IThread } from '@/models/Thread'
+import type { ThreadWithConversation } from '@/types/thread'
 import {
   sendUserMessage,
   normalizeChat,
@@ -30,7 +31,7 @@ interface ChatStore {
 
   addMessageToChat: (role: Roles, text: string, diagram?: string) => void
   handleSendMessage: (messageText: string, chatId: string) => Promise<void>
-  loadChatThread: (chatId: string, thread: IThread | null) => Promise<void>
+  loadChatThread: (chatId: string, thread: ThreadWithConversation | null) => Promise<void>
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -153,7 +154,7 @@ export const useChatStore = create<ChatStore>()(
       },
 
       // ✅ REEMPLAZAR loadChatThread con esta versión optimizada:
-      loadChatThread: async (chatId: string, thread: IThread | null) => {
+      loadChatThread: async (chatId: string, thread: ThreadWithConversation | null) => {
         const currentState = get()
 
         // ✅ Prevenir llamadas duplicadas
@@ -179,7 +180,7 @@ export const useChatStore = create<ChatStore>()(
           if (thread) {
             set({
               chatId: thread.chat_id,
-              chatHistory: thread.conversation,
+              chatHistory: thread.conversation || [],
               chatDiagram: thread.diagram,
               chatSchemas: thread.schemas || { mongo: '', sql: '' },
               isLoading: false,

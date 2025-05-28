@@ -1,6 +1,7 @@
 'use client'
 
 import type { IThread } from '@/models/Thread'
+import type { ThreadWithConversation } from '@/types/thread'
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams } from 'next/navigation'
@@ -20,7 +21,7 @@ import { useChatStore } from '@/stores/chat'
 import { useConfigStore } from '@/stores/config'
 import { useUser } from '@clerk/nextjs'
 
-export default function PageContent({ thread }: { thread: IThread | null }) {
+export default function PageContent({ thread }: { thread: ThreadWithConversation | null }) {
   const { loadChatThread, chatId: storeChatId } = useChatStore()
   const params = useParams()
   const urlChatId = params.id as string
