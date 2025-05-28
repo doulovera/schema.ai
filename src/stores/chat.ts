@@ -4,12 +4,14 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Message, Roles } from '@/types/chat'
 import type { IThread } from '@/models/Thread'
+import type { ThreadWithConversation } from '@/types/thread'
 import {
   sendUserMessage,
   normalizeChat,
   compareJsonSchemas,
   generateDatabaseScriptFromDiagram,
-  validateUserIntent, // <<< IMPORTAR validateUserIntent
+  validateUserIntent,
+  getRandomWelcomeMessage,
 } from '@/lib/gemini' // Asegúrate que la ruta sea correcta
 import { getThread, updateThread, createThread } from '@/lib/thread'
 import { useConfigStore } from './config'
@@ -29,7 +31,11 @@ interface ChatStore {
 
   addMessageToChat: (role: Roles, text: string, diagram?: string) => void
   handleSendMessage: (messageText: string, chatId: string) => Promise<void>
-  loadChatThread: (chatId: string, thread: IThread | null) => Promise<void>
+  loadChatThread: (
+    chatId: string,
+    thread: ThreadWithConversation | null,
+  ) => Promise<void>
+  regenerateSchemasIfNeeded: (chatId: string, diagram: string) => Promise<void>
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -110,11 +116,13 @@ export const useChatStore = create<ChatStore>()(
             generateDatabaseScriptFromDiagram(aiDiagramResponse, 'mongo'),
           ])
 
+          const newSchemas = {
+            sql: sqlSchema.replaceAll(';;', ';\n') || '',
+            mongo: mongodbSchema || '',
+          }
+
           set({
-            chatSchemas: {
-              sql: sqlSchema.replaceAll(';;', ';\n') || '',
-              mongo: mongodbSchema || '',
-            },
+            chatSchemas: newSchemas,
           })
 
           set({ chatDiagram: aiDiagramResponse })
@@ -125,7 +133,7 @@ export const useChatStore = create<ChatStore>()(
             await updateThread(chatId, {
               diagram: aiDiagramResponse,
               conversation: updatedConversationHistory,
-              schemas: chatSchemas,
+              schemas: newSchemas,
             })
           } else {
             const { userId } = useConfigStore.getState()
@@ -136,7 +144,7 @@ export const useChatStore = create<ChatStore>()(
               chat_id: chatId,
               diagram: aiDiagramResponse,
               conversation: get().chatHistory || [],
-              schemas: chatSchemas,
+              schemas: newSchemas,
             })
             set({ chatId: newThread.chat_id })
           }
@@ -151,23 +159,62 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      loadChatThread: async (chatId: string, thread: IThread | null) => {
-        set({ isLoading: true })
+      // ✅ REEMPLAZAR loadChatThread con esta versión optimizada:
+      loadChatThread: async (
+        chatId: string,
+        thread: ThreadWithConversation | null,
+      ) => {
+        const currentState = get()
+
+        // ✅ Prevenir llamadas duplicadas
+        if (currentState.isLoading && currentState.chatId === chatId) {
+          console.log('🚫 LoadChatThread already in progress for:', chatId)
+          return
+        }
+
+        // ✅ Si ya tenemos este chat cargado, no recargar
+        if (
+          currentState.chatId === chatId &&
+          Array.isArray(currentState.chatHistory) &&
+          currentState.chatHistory.length > 0
+        ) {
+          console.log('✅ Chat already loaded:', chatId)
+          return
+        }
+
+        console.log('🔄 Loading chat thread:', chatId)
+        set({ isLoading: true, chatId })
+
         try {
           if (thread) {
             set({
               chatId: thread.chat_id,
-              chatHistory: thread.conversation,
+              chatHistory: thread.conversation || [],
               chatDiagram: thread.diagram,
-              chatSchemas: thread.schemas || { mongo: '', sql: '' }, // Ensure chatSchemas is not undefined
+              chatSchemas: thread.schemas || { mongo: '', sql: '' },
               isLoading: false,
             })
+
+            // ✅ Regenerar esquemas automáticamente si es necesario
+            await get().regenerateSchemasIfNeeded(
+              thread.chat_id,
+              thread.diagram,
+            )
           } else {
+            const welcome = await getRandomWelcomeMessage()
             set({
               chatId,
-              chatHistory: [],
+              chatHistory: [
+                {
+                  id: Date.now().toString(),
+                  role: ROLES.assistant,
+                  message: welcome,
+                  diagram: '',
+                  timestamp: Date.now(),
+                },
+              ],
               chatDiagram: null,
-              chatSchemas: { mongo: '', sql: '' }, // Default for new/empty thread
+              chatSchemas: { mongo: '', sql: '' },
               isLoading: false,
             })
           }
@@ -180,6 +227,37 @@ export const useChatStore = create<ChatStore>()(
             chatSchemas: { mongo: '', sql: '' },
             isLoading: false,
           })
+        }
+      },
+
+      // ✅ Función auxiliar para regenerar esquemas si están vacíos
+      regenerateSchemasIfNeeded: async (chatId: string, diagram: string) => {
+        const { chatSchemas } = get()
+
+        // Solo regenerar si no hay esquemas o están vacíos
+        if (diagram && !chatSchemas.sql.trim() && !chatSchemas.mongo.trim()) {
+          console.log('🔄 Regenerating missing schemas for existing thread')
+
+          try {
+            const [sqlSchema, mongodbSchema] = await Promise.all([
+              generateDatabaseScriptFromDiagram(diagram, 'sql'),
+              generateDatabaseScriptFromDiagram(diagram, 'mongo'),
+            ])
+
+            const newSchemas = {
+              sql: sqlSchema.replaceAll(';;', ';\n') || '',
+              mongo: mongodbSchema || '',
+            }
+
+            set({ chatSchemas: newSchemas })
+
+            // Actualizar el thread en la base de datos
+            await updateThread(chatId, { schemas: newSchemas })
+
+            console.log('✅ Schemas regenerated successfully')
+          } catch (error) {
+            console.error('❌ Error regenerating schemas:', error)
+          }
         }
       },
     }),

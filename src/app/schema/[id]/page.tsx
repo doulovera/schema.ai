@@ -9,14 +9,12 @@ type PageProps = {
 
 export default async function Schema({ params }: PageProps) {
   const { id: chatId } = await params
-
-  const thread = await getThread(chatId)
   const user = await currentUser()
+  const thread = await getThread(chatId)
 
   if (thread) {
     const threadUserId = thread?.user_id
     const currentUserId = user?.id
-
     if (threadUserId !== currentUserId) {
       redirect('/schemas')
     }

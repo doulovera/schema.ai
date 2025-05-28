@@ -1,9 +1,14 @@
 'use server'
 
 import Thread, { type IThread } from '@/models/Thread'
+import Conversation, { type IConversation } from '@/models/Conversation'
+import type { Message } from '@/types/chat'
 import dbConnect from './db'
 
-export async function createThread(userId: string, data: Partial<IThread>) {
+export async function createThread(
+  userId: string,
+  data: Partial<IThread> & { conversation?: Array<Message> },
+) {
   await dbConnect()
   const newThread = await Thread.create({
     chat_id: data.chat_id,
@@ -13,21 +18,53 @@ export async function createThread(userId: string, data: Partial<IThread>) {
       sql: data.schemas?.sql,
       mongo: data.schemas?.mongo,
     },
-    conversation: data.conversation,
   })
+  if (data.conversation && data.conversation.length > 0) {
+    await Conversation.create({
+      thread_id: newThread.chat_id,
+      messages: data.conversation,
+    })
+  }
   return JSON.parse(JSON.stringify(newThread))
 }
 
-export async function getThread(chatId: string): Promise<IThread | null> {
+export async function getThread(
+  chatId: string,
+): Promise<(IThread & { conversation?: Array<Message> }) | null> {
   await dbConnect()
-  const foundThread = await Thread.findOne({ chat_id: chatId })
+
+  // Obtiene el hilo principal de la base de datos.
+  const foundThread = await Thread.findOne({ chat_id: chatId }).lean<IThread>()
+
   if (!foundThread) {
     return null
   }
-  return JSON.parse(JSON.stringify(foundThread))
+
+  // Obtiene la conversación asociada al hilo.
+  const conversationDoc = await Conversation.findOne({
+    thread_id: chatId,
+  }).lean<IConversation>()
+
+  // Convierte foundThread en un objeto plano para que coincida con IThread.
+  const threadObj: IThread & { conversation?: Array<Message> } = JSON.parse(
+    JSON.stringify(foundThread),
+  )
+
+  if (conversationDoc?.messages) {
+    threadObj.conversation = conversationDoc.messages
+  } else {
+    // Asegura que la conversación sea un array vacío si no existe.
+    threadObj.conversation = []
+  }
+
+  // Serializa el objeto para asegurar la compatibilidad con Client Components.
+  return JSON.parse(JSON.stringify(threadObj))
 }
 
-export async function updateThread(chatId: string, data: Partial<IThread>) {
+export async function updateThread(
+  chatId: string,
+  data: Partial<IThread> & { conversation?: Array<Message> },
+) {
   await dbConnect()
   const updatedThread = await Thread.findOneAndUpdate(
     { chat_id: chatId },
@@ -37,13 +74,38 @@ export async function updateThread(chatId: string, data: Partial<IThread>) {
   if (!updatedThread) {
     return null
   }
+  if (data.conversation) {
+    await Conversation.findOneAndUpdate(
+      { thread_id: chatId },
+      { $set: { messages: data.conversation } },
+      { upsert: true },
+    )
+  }
   return JSON.parse(JSON.stringify(updatedThread))
 }
 
-export async function getThreadsByUserId(userId: string): Promise<IThread[]> {
+export async function getThreadsByUserId(
+  userId: string,
+): Promise<(IThread & { conversation?: Array<Message> })[]> {
   await dbConnect()
+
+  // Primero obtenemos solo los IDs de los threads del usuario
   const threads = await Thread.find({ user_id: userId })
-  return JSON.parse(JSON.stringify(threads))
+    .select('chat_id')
+    .lean()
+
+  // Luego usamos getThread para cada uno, reutilizando la lógica existente
+  const threadsWithConversations = await Promise.all(
+    threads.map(async (thread) => {
+      const fullThread = await getThread(thread.chat_id)
+      return fullThread
+    }),
+  )
+
+  // Filtramos cualquier thread que pueda ser null
+  return threadsWithConversations.filter(
+    (thread): thread is NonNullable<typeof thread> => thread !== null,
+  )
 }
 
 export async function deleteThread(chatId: string) {
@@ -75,7 +137,16 @@ export async function duplicateThread(
       sql: thread.schemas?.sql,
       mongo: thread.schemas?.mongo,
     },
-    conversation: thread.conversation,
   })
+
+  // Duplicar la conversación asociada
+  const conversation = await Conversation.findOne({ thread_id: chatId })
+  if (conversation) {
+    await Conversation.create({
+      thread_id: newChatId,
+      messages: conversation.messages,
+    })
+  }
+
   return JSON.parse(JSON.stringify(newThread))
 }

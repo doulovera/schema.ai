@@ -1,4 +1,3 @@
-import type { Message } from '@/types/chat'
 import mongoose, { Schema, type Document } from 'mongoose'
 
 export interface IThread extends Document {
@@ -9,17 +8,8 @@ export interface IThread extends Document {
     sql: string
     mongo: string
   }
-  conversation: Array<Message>
   createdAt: string
   updatedAt: string
-}
-
-const MessageSchemaContents = {
-  id: { type: String, required: true },
-  timestamp: { type: Number, required: true },
-  role: { type: String, required: true },
-  message: { type: String, required: true },
-  diagram: { type: String },
 }
 
 const ThreadSchema: Schema = new Schema(
@@ -31,7 +21,6 @@ const ThreadSchema: Schema = new Schema(
       sql: { type: String, default: '' },
       mongo: { type: String, default: '' },
     },
-    conversation: [new Schema(MessageSchemaContents, { _id: false })],
   },
   { timestamps: true },
 )
