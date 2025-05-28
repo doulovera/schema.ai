@@ -31,7 +31,11 @@ interface ChatStore {
 
   addMessageToChat: (role: Roles, text: string, diagram?: string) => void
   handleSendMessage: (messageText: string, chatId: string) => Promise<void>
-  loadChatThread: (chatId: string, thread: ThreadWithConversation | null) => Promise<void>
+  loadChatThread: (
+    chatId: string,
+    thread: ThreadWithConversation | null,
+  ) => Promise<void>
+  regenerateSchemasIfNeeded: (chatId: string, diagram: string) => Promise<void>
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -112,11 +116,13 @@ export const useChatStore = create<ChatStore>()(
             generateDatabaseScriptFromDiagram(aiDiagramResponse, 'mongo'),
           ])
 
+          const newSchemas = {
+            sql: sqlSchema.replaceAll(';;', ';\n') || '',
+            mongo: mongodbSchema || '',
+          }
+
           set({
-            chatSchemas: {
-              sql: sqlSchema.replaceAll(';;', ';\n') || '',
-              mongo: mongodbSchema || '',
-            },
+            chatSchemas: newSchemas,
           })
 
           set({ chatDiagram: aiDiagramResponse })
@@ -127,7 +133,7 @@ export const useChatStore = create<ChatStore>()(
             await updateThread(chatId, {
               diagram: aiDiagramResponse,
               conversation: updatedConversationHistory,
-              schemas: chatSchemas,
+              schemas: newSchemas,
             })
           } else {
             const { userId } = useConfigStore.getState()
@@ -138,7 +144,7 @@ export const useChatStore = create<ChatStore>()(
               chat_id: chatId,
               diagram: aiDiagramResponse,
               conversation: get().chatHistory || [],
-              schemas: chatSchemas,
+              schemas: newSchemas,
             })
             set({ chatId: newThread.chat_id })
           }
@@ -154,7 +160,10 @@ export const useChatStore = create<ChatStore>()(
       },
 
       // ✅ REEMPLAZAR loadChatThread con esta versión optimizada:
-      loadChatThread: async (chatId: string, thread: ThreadWithConversation | null) => {
+      loadChatThread: async (
+        chatId: string,
+        thread: ThreadWithConversation | null,
+      ) => {
         const currentState = get()
 
         // ✅ Prevenir llamadas duplicadas
@@ -185,6 +194,12 @@ export const useChatStore = create<ChatStore>()(
               chatSchemas: thread.schemas || { mongo: '', sql: '' },
               isLoading: false,
             })
+
+            // ✅ Regenerar esquemas automáticamente si es necesario
+            await get().regenerateSchemasIfNeeded(
+              thread.chat_id,
+              thread.diagram,
+            )
           } else {
             const welcome = await getRandomWelcomeMessage()
             set({
@@ -212,6 +227,37 @@ export const useChatStore = create<ChatStore>()(
             chatSchemas: { mongo: '', sql: '' },
             isLoading: false,
           })
+        }
+      },
+
+      // ✅ Función auxiliar para regenerar esquemas si están vacíos
+      regenerateSchemasIfNeeded: async (chatId: string, diagram: string) => {
+        const { chatSchemas } = get()
+
+        // Solo regenerar si no hay esquemas o están vacíos
+        if (diagram && !chatSchemas.sql.trim() && !chatSchemas.mongo.trim()) {
+          console.log('🔄 Regenerating missing schemas for existing thread')
+
+          try {
+            const [sqlSchema, mongodbSchema] = await Promise.all([
+              generateDatabaseScriptFromDiagram(diagram, 'sql'),
+              generateDatabaseScriptFromDiagram(diagram, 'mongo'),
+            ])
+
+            const newSchemas = {
+              sql: sqlSchema.replaceAll(';;', ';\n') || '',
+              mongo: mongodbSchema || '',
+            }
+
+            set({ chatSchemas: newSchemas })
+
+            // Actualizar el thread en la base de datos
+            await updateThread(chatId, { schemas: newSchemas })
+
+            console.log('✅ Schemas regenerated successfully')
+          } catch (error) {
+            console.error('❌ Error regenerating schemas:', error)
+          }
         }
       },
     }),
