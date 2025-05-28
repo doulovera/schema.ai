@@ -2,12 +2,25 @@ import { ConversationView } from "@/components/chat/conversation-view";
 import { ChatInput } from "@/components/chat/chat-input";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from 'react'
 import { useChatStore } from "@/stores/chat";
+import { useParams } from 'next/navigation'
 
 export default function Chat({ hidePanel }: { hidePanel: () => void }) {
-  const { chatHistory, isLoading } = useChatStore()
+  const { chatHistory, isLoading, chatDiagram } = useChatStore()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const params = useParams()
+
+  // Obtener el nombre de la base de datos desde el diagrama actual
+  const dbName = useMemo(() => {
+    if (!chatDiagram) return 'Cargando...'
+    try {
+      const parsed = JSON.parse(chatDiagram)
+      return parsed?.database?.name || 'Chat'
+    } catch {
+      return 'Chat'
+    }
+  }, [chatDiagram])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
   useEffect(() => {
@@ -44,7 +57,9 @@ export default function Chat({ hidePanel }: { hidePanel: () => void }) {
   return (
     <div className="flex flex-col h-full border-r">
       <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="text-lg font-medium">Chat</h2>
+        <h2 className="text-lg font-medium truncate max-w-[70%]" title={dbName}>
+          {dbName}
+        </h2>
         <Button
           variant="ghost"
           size="icon"

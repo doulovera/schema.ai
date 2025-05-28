@@ -56,7 +56,10 @@ const DiagramPanel = memo(function DiagramPanel({
           <h2 className="text-lg font-medium">Diagrama</h2>
         </div>
         <div className="flex items-center gap-4">
-          <Link href={PATHS.SCHEMAS} className="text-sm text-muted-foreground">
+          <Link
+            href={PATHS.SCHEMAS}
+            className="text-sm text-muted-foregroun font-medium"
+          >
             <p className="text-foreground">Ver Esquemas</p>
           </Link>
 
