@@ -84,10 +84,28 @@ export async function updateThread(
   return JSON.parse(JSON.stringify(updatedThread))
 }
 
-export async function getThreadsByUserId(userId: string): Promise<IThread[]> {
+export async function getThreadsByUserId(
+  userId: string,
+): Promise<(IThread & { conversation?: Array<Message> })[]> {
   await dbConnect()
+
+  // Primero obtenemos solo los IDs de los threads del usuario
   const threads = await Thread.find({ user_id: userId })
-  return JSON.parse(JSON.stringify(threads))
+    .select('chat_id')
+    .lean()
+
+  // Luego usamos getThread para cada uno, reutilizando la lógica existente
+  const threadsWithConversations = await Promise.all(
+    threads.map(async (thread) => {
+      const fullThread = await getThread(thread.chat_id)
+      return fullThread
+    }),
+  )
+
+  // Filtramos cualquier thread que pueda ser null
+  return threadsWithConversations.filter(
+    (thread): thread is NonNullable<typeof thread> => thread !== null,
+  )
 }
 
 export async function deleteThread(chatId: string) {

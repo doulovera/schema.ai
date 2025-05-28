@@ -1,6 +1,7 @@
 'use client'
 
 import type { IThread } from '@/models/Thread'
+import type { Message } from '@/types/chat'
 import { useState } from 'react'
 import {
   Card,
@@ -21,6 +22,7 @@ import { useRouter } from 'next/navigation'
 
 interface Thread extends Partial<IThread> {
   dbTitle: string
+  conversation?: Array<Message>
 }
 
 export function ThreadList({ threads }: { threads: Thread[] }) {
@@ -95,7 +97,9 @@ export function ThreadList({ threads }: { threads: Thread[] }) {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    {thread.conversation?.at(-1)?.message}
+                    {thread.conversation && thread.conversation.length > 0
+                      ? thread.conversation.at(-1)?.message
+                      : 'No hay mensajes en esta conversación'}
                   </p>
                 </CardContent>
                 <CardFooter className="text-xs text-muted-foreground">
