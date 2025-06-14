@@ -157,6 +157,7 @@ export const useChatStore = create<ChatStore>()(
         set({ isLoading: true })
         try {
           if (thread) {
+            console.log(thread.diagram)
             set({
               chatId: thread.chat_id,
               chatHistory: thread.conversation,
@@ -173,7 +174,7 @@ export const useChatStore = create<ChatStore>()(
               isLoading: false,
             })
             const randomIndex = Math.floor(Math.random() * defaultMessages.length);
-            addMessageToChat(ROLES.assistant, defaultMessages[randomIndex]);
+            addMessageToChat(ROLES.user, defaultMessages[randomIndex]);
           }
         } catch (error) {
           console.error('Error loading chat thread:', error)
