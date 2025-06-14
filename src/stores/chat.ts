@@ -13,6 +13,7 @@ import {
 } from '@/lib/gemini' // Asegúrate que la ruta sea correcta
 import { getThread, updateThread, createThread } from '@/lib/thread'
 import { useConfigStore } from './config'
+import defaultMessages from '@/constants/defaultMessages'
 
 const ROLES: Record<string, Roles> = {
   user: 'user',
@@ -152,6 +153,7 @@ export const useChatStore = create<ChatStore>()(
       },
 
       loadChatThread: async (chatId: string, thread: IThread | null) => {
+        const { addMessageToChat } = get()
         set({ isLoading: true })
         try {
           if (thread) {
@@ -167,9 +169,11 @@ export const useChatStore = create<ChatStore>()(
               chatId,
               chatHistory: [],
               chatDiagram: null,
-              chatSchemas: { mongo: '', sql: '' }, // Default for new/empty thread
+              chatSchemas: { mongo: '', sql: '' },
               isLoading: false,
             })
+            const randomIndex = Math.floor(Math.random() * defaultMessages.length);
+            addMessageToChat(ROLES.assistant, defaultMessages[randomIndex]);
           }
         } catch (error) {
           console.error('Error loading chat thread:', error)

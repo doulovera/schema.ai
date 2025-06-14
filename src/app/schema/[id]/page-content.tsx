@@ -23,7 +23,7 @@ import { useUser } from '@clerk/nextjs'
 export default function PageContent({ thread }: { thread: IThread | null }) {
   const [panels, setPanels] = useState<{ [panel: string]: boolean }>({
     chat: true,
-    schema: true,
+    schema: false,
   })
 
   const { loadChatThread, chatId: storeChatId } = useChatStore()
