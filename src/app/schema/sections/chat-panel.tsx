@@ -5,8 +5,17 @@ import { ChevronLeft } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useChatStore } from "@/stores/chat";
 
+const getChatTitle = (chatDiagram: any) => {
+  if (chatDiagram) {
+    const parsed = JSON.parse(chatDiagram);
+    console.log(parsed);
+    return parsed.database.name || "Chat";
+  }
+  return "Chat";
+};
+
 export default function Chat({ hidePanel }: { hidePanel: () => void }) {
-  const { chatHistory, isLoading } = useChatStore();
+  const { chatHistory, isLoading, chatDiagram } = useChatStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: no need
@@ -19,7 +28,7 @@ export default function Chat({ hidePanel }: { hidePanel: () => void }) {
   return (
     <div className="flex flex-col h-full border-r">
       <div className="p-4 border-b flex justify-between items-center">
-        <h2 className="text-lg font-medium">Chat</h2>
+        <h2 className="text-lg font-medium">{getChatTitle(chatDiagram)}</h2>
         <Button
           variant="ghost"
           size="icon"

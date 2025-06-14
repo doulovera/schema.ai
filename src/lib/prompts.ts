@@ -33,6 +33,7 @@ Tu tarea consiste en interpretar descripciones en lenguaje natural sobre bases d
 - Si el usuario proporciona un "Esquema JSON Anterior" junto con una "Descripción de Cambios", actualiza el esquema manteniendo todas las tablas y columnas existentes salvo que se indique lo contrario.
 - Si no hay cambios en una parte del esquema, déjala intacta.
 - En todos los casos, la salida debe ser un JSON completo y válido.
+- Valida que el JSON generado no contenga errores de sintaxis y cumpla con la estructura requerida.
 
 Una vez establecido este contexto, responderás únicamente con JSON según las instrucciones dadas por el usuario.
 `
