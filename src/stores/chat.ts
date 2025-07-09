@@ -172,8 +172,8 @@ export const useChatStore = create<ChatStore>()(
               chatSchemas: { mongo: '', sql: '' },
               isLoading: false,
             })
-            const randomIndex = Math.floor(Math.random() * defaultMessages.length);
-            addMessageToChat(ROLES.assistant, defaultMessages[randomIndex]);
+            //const randomIndex = Math.floor(Math.random() * defaultMessages.length);
+            //addMessageToChat(ROLES.assistant, defaultMessages[randomIndex]);
           }
         } catch (error) {
           console.error('Error loading chat thread:', error)
